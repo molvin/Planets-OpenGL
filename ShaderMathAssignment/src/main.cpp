@@ -1,34 +1,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <chrono>
-
-const char* VERTEX_SRC = R"(
-#version 330 core
-
-in vec2 a_Position;
-in vec3 a_Color;
-out vec3 f_Color;
-
-void main()
-{
-	gl_Position = vec4(a_Position, 0.0f, 1.0f);
-	f_Color = a_Color;
-}
-)";
-
-
-const char* FRAG_SRC = R"(
-#version 330 core
-
-out vec4 o_Color;
-in vec3 f_Color;
-
-void main()
-{
-	o_Color = vec4(f_Color, 1.0f);
-}
-
-)";
+#include <string>
+#include "Shader.h"
+#include "FileManager.h"
 
 void OnKeyEvent(GLFWwindow* window, const int key, const int scanCode, const int action, const int mods)
 {
@@ -87,22 +61,12 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
 
 	//Shader
-	const GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &VERTEX_SRC, nullptr);
-	glCompileShader(vertexShader);
-	const GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &FRAG_SRC, nullptr);
-	glCompileShader(fragmentShader);
-	const GLuint shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-	glUseProgram(shaderProgram);
-
-	char infoLogBuffer[1024];
-	glGetProgramInfoLog(shaderProgram, 1024, nullptr, infoLogBuffer);
-	printf("Shader result: \n %s", infoLogBuffer);
-
+	std::string vertexShader = utils::ReadFile("shaders/vertexShader.vert");
+	printf(vertexShader.c_str());
+	std::string fragmentShader = utils::ReadFile("shaders/fragmentShader.frag");
+	printf(fragmentShader.c_str());
+	Shader shader(vertexShader, fragmentShader);
+	shader.Bind();
 	
 	while (!glfwWindowShouldClose(window))
 	{		
