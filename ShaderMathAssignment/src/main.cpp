@@ -3,6 +3,8 @@
 #include <string>
 #include "Shader.h"
 #include "FileManager.h"
+#include "VertexBuffer.h"
+#include "VertexArray.h"
 
 void OnKeyEvent(GLFWwindow* window, const int key, const int scanCode, const int action, const int mods)
 {
@@ -15,69 +17,89 @@ int main()
 	if (!glfwInit())
 		return -1;
 
-	GLFWwindow* window = glfwCreateWindow(800	, 600, "GLFW Window", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(800 , 600, "GLFW Window", nullptr, nullptr);
 	if (!window)
 	{
 		glfwTerminate();
 		return -1;
 	}
-
 	glfwMakeContextCurrent(window);
-
 	//input
 	glfwSetKeyCallback(window, OnKeyEvent);
-
 	glewInit();
-
-	//vertices
-	float vertices[] =
+	
+	//Quad
+	float quadVertices[] =
 	{
-		-0.5f, -0.5f, 
-		0.5f, -0.5f,
-		0.0f, 0.5f
+		-0.5f, -0.5f,    1.0f, 0.0f, 0.0f,    0.0f, 0.0f,
+		0.5f, -0.5f,    0.0f, 1.0f, 0.0f,    1.0f, 0.0f,
+		0.5f, 0.5f,        0.0f, 0.0f, 1.0f,    1.0f, 1.0f,
+		-0.5f, 0.5f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f,
 	};
-	GLuint vertexBuffer;
-	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	//Draw triangle
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_TRUE, 0, nullptr);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	//Color
-	float colors[] =
+	BufferLayout layout;
+	layout.AddLayoutElement(2, GL_FLOAT, false, sizeof(float) * (2 + 3 + 2), 0);
+	layout.AddLayoutElement(2, GL_FLOAT, false, sizeof(float) * (2 + 3 + 2),sizeof(float) * 2);
+	layout.AddLayoutElement(2, GL_FLOAT, false, sizeof(float) * (2 + 3 + 2), sizeof(float) * (2 + 3));
+	
+	VertexBuffer quadBuffer(quadVertices, sizeof(float) * 7 * 4);
+	quadBuffer.SetLayout(layout);
+	VertexArray quadVao;
+	quadVao.AddVertexBuffer(&quadBuffer);
+	
+	float triVertices[] =
 	{
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f
+		-0.5f, -0.5f,    1.0f, 0.0f, 0.0f,    0.0f, 0.0f,
+		0.0f, 0.5f,        0.0f, 0.0f, 1.0f,    0.5f, 1.0f,
+		0.5f, -0.5f,    0.0f, 1.0f, 0.0f,    1.0f, 0.0f
 	};
-	GLuint colorBuffer;
-	glGenBuffers(1, &colorBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
-	//Draw triangle
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, 0, nullptr);
-	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+	VertexBuffer triBuffer(triVertices, sizeof(float) * 7 * 3);
+	triBuffer.SetLayout(layout);
+	VertexArray triVao;
+	triVao.AddVertexBuffer(&triBuffer);
 
 	//Shader
-	std::string vertexShader = utils::ReadFile("shaders/vertexShader.vert");
-	printf(vertexShader.c_str());
-	std::string fragmentShader = utils::ReadFile("shaders/fragmentShader.frag");
-	printf(fragmentShader.c_str());
-	Shader shader(vertexShader, fragmentShader);
+	const std::string vertexShader = utils::ReadFile("shaders/vertexShader.vert");
+	printf("%s", vertexShader.c_str());
+	const std::string fragmentShader = utils::ReadFile("shaders/fragmentShader.frag");
+	printf("%s", fragmentShader.c_str());
+	const Shader shader(vertexShader, fragmentShader);
 	shader.Bind();
+	
+	shader.UploadUniformFloat("u_Scale", 0.5f);
+
+	unsigned char textureColors[] =
+	{
+		255, 0,   0,   255,
+		0,   255, 0,   255,
+		0,   0,   255, 255,
+		255, 255, 255, 255
+	};
+	
+	GLuint texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureColors);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	
 	while (!glfwWindowShouldClose(window))
 	{		
-		//Clear
-		glfwSwapBuffers(window);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);	
 
+		triVao.Bind();
+		shader.UploadUniformFloat("u_Time", glfwGetTime());
+		shader.UploadUniformVec2("u_Offset", -0.5f, 0.0f);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
-	
-		//Poll events
+
+		quadVao.Bind();	
+		shader.UploadUniformFloat("u_Time", -glfwGetTime());
+		shader.UploadUniformVec2("u_Offset", 0.5f, 0.0f);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 

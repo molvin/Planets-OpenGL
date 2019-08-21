@@ -30,14 +30,14 @@ Shader::Shader(const std::string& vertexSource, const std::string& fragSource)
 	glCompileShader(fragmentShader);
 
 	compiled = 0;
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &compiled);
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compiled);
 
 	if (compiled == GL_FALSE)
 	{
 		int length = 0;
-		glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &length);
+		glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &length);
 		std::vector<GLchar> infoLog(length);
-		glGetShaderInfoLog(vertexShader, length, &length, &infoLog[0]);
+		glGetShaderInfoLog(fragmentShader, length, &length, &infoLog[0]);
 
 		//TODO: add logger for error logging
 
@@ -70,18 +70,26 @@ Shader::Shader(const std::string& vertexSource, const std::string& fragSource)
 	glDetachShader(_programId, vertexShader);
 	glDetachShader(_programId, fragmentShader);
 }
-
 Shader::~Shader()
 {
 	glDeleteProgram(_programId);
 }
-
 void Shader::Bind() const
 {
 	glUseProgram(_programId);
 }
-
 void Shader::Unbind() const
 {
 	glUseProgram(0);
+}
+
+void Shader::UploadUniformFloat(const std::string& name, const float value) const
+{
+	const GLint uniform = glGetUniformLocation(_programId, name.c_str());
+	glUniform1f(uniform, value);
+}
+void Shader::UploadUniformVec2(const std::string& name, float x, float y) const
+{
+	const GLint uniform = glGetUniformLocation(_programId, name.c_str());
+	glUniform2f(uniform, x, y);
 }
