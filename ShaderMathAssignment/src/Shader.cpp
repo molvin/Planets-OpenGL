@@ -1,6 +1,7 @@
 #include "Shader.h"
 #include <vector>
-#include "FileManager.h"
+#include <sstream>
+#include <fstream>
 
 Shader::Shader(const std::string& vertexSource, const std::string& fragSource)
 {
@@ -92,4 +93,43 @@ void Shader::UploadUniformVec2(const std::string& name, float x, float y) const
 {
 	const GLint uniform = glGetUniformLocation(_programId, name.c_str());
 	glUniform2f(uniform, x, y);
+}
+
+ShaderSource Shader::ParseShaderFile(const std::string& path)
+{
+	std::ifstream file(path);
+	std::string line;
+
+	enum ShaderType
+	{
+		NONE = -1, VERTEX = 0, FRAGMENT = 1
+	};
+	ShaderType type = NONE;
+	std::stringstream stringStreams[2];
+
+	while(std::getline(file, line))
+	{
+		if(line.find("#SHADER") != std::string::npos)
+		{
+			if (line.find("VERTEX") != std::string::npos)
+				type = VERTEX;
+			else if (line.find("FRAGMENT") != std::string::npos)
+				type = FRAGMENT;
+			else
+			{
+				printf("Failed to parse file: %s \n", path.c_str());
+				return { "", "" };
+			}
+		}
+		else
+		{
+			if(type == NONE)
+			{
+				printf("Failed to parse file: %s \n", path.c_str());
+				return { "", "" };
+			}
+			stringStreams[type] << line << '\n';
+		}
+	}
+	return { stringStreams[0].str(), stringStreams[1].str() };
 }

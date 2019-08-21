@@ -1,8 +1,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <string>
 #include "Shader.h"
-#include "FileManager.h"
 #include "VertexBuffer.h"
 #include "VertexArray.h"
 
@@ -58,11 +56,8 @@ int main()
 	triVao.AddVertexBuffer(&triBuffer);
 
 	//Shader
-	const std::string vertexShader = utils::ReadFile("shaders/vertexShader.vert");
-	printf("%s", vertexShader.c_str());
-	const std::string fragmentShader = utils::ReadFile("shaders/fragmentShader.frag");
-	printf("%s", fragmentShader.c_str());
-	const Shader shader(vertexShader, fragmentShader);
+	const ShaderSource source = Shader::ParseShaderFile("shaders/Basic.shader");
+	const Shader shader(source.VertexSource, source.FragmentSource);
 	shader.Bind();
 	
 	shader.UploadUniformFloat("u_Scale", 0.5f);
@@ -83,7 +78,8 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	
+
+	//TODO: index buffers, mesh, material, renderable, renderer, transform
 	while (!glfwWindowShouldClose(window))
 	{		
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);

@@ -7,7 +7,6 @@
     <ClCompile Include="src\VertexArray.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\FileManager.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\VertexBuffer.h" />
     <ClInclude Include="src\VertexArray.h" />

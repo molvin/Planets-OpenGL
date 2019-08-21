@@ -157,7 +157,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Shader.h" />
-    <ClInclude Include="src\FileManager.h" />
     <ClInclude Include="src\VertexBuffer.h" />
     <ClInclude Include="src\VertexArray.h" />
   </ItemGroup>

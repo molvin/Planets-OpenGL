@@ -1,3 +1,4 @@
+#SHADER VERTEX
 #version 330 core
 
 in vec2 a_Position;
@@ -23,4 +24,22 @@ void main()
 	gl_Position = vec4(Pos, 0.0f, 1.0f);
 	f_Color = vec3(a_TexCoord, 0.0f);
 	f_TexCoord = a_TexCoord;
+}
+
+#SHADER FRAGMENT
+
+#version 330 core
+
+uniform sampler2D u_Sampler;
+
+out vec4 o_Color;
+
+in vec2 f_TexCoord;
+in vec3 f_Color;
+
+void main()
+{
+	o_Color = vec4(f_TexCoord, 0.0f, 1.0f);
+	//o_Color = vec4(f_Color, 1.0f);
+	o_Color = texture(u_Sampler, f_TexCoord);
 }
