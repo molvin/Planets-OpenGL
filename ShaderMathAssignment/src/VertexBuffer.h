@@ -1,6 +1,7 @@
 #pragma once
 #include <GL/glew.h>
 #include <vector>
+#include <glm/vec4.hpp>
 
 struct LayoutElement
 {

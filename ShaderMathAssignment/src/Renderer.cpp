@@ -6,8 +6,14 @@
 
 Renderer::SceneData* Renderer::_sceneData = new SceneData;
 
-void Renderer::SetSceneData(const glm::mat4& viewProjectionMatrix)
+void Renderer::Init()
 {
+	glEnable(GL_DEPTH_TEST);
+}
+void Renderer::Begin(const glm::mat4& viewProjectionMatrix)
+{
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	_sceneData->viewProjection = viewProjectionMatrix;
 }
 void Renderer::Render(const Shader* shader, const VertexArray* vao, const glm::mat4& transform)

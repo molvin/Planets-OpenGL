@@ -4,6 +4,8 @@
 #include <fstream>
 #include "glm/gtc/type_ptr.hpp"
 
+//TODO: Cache uniform names, limit gl calls
+
 Shader::Shader(const std::string& vertexSource, const std::string& fragSource)
 {
 	const GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -88,25 +90,21 @@ void Shader::Unbind() const
 
 void Shader::UploadUniformFloat(const std::string& name, const float value) const
 {
-	Bind();
 	const GLint uniform = glGetUniformLocation(_programId, name.c_str());
 	glUniform1f(uniform, value);
 }
 void Shader::UploadUniformVec2(const std::string& name, float x, float y) const
 {
-	Bind();
 	const GLint uniform = glGetUniformLocation(_programId, name.c_str());
 	glUniform2f(uniform, x, y);
 }
 void Shader::UploadUniformMat4(const std::string& name, glm::mat4 mat) const
 {
-	Bind();
 	const GLint uniform = glGetUniformLocation(_programId, name.c_str());
 	glUniformMatrix4fv(uniform, 1, GL_FALSE, glm::value_ptr(mat));
 }
 void Shader::UploadUniformInt(const std::string& name, int i) const
 {
-	Bind();
 	const GLint uniform = glGetUniformLocation(_programId, name.c_str());
 	glUniform1i(uniform, i);
 }

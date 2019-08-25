@@ -8,44 +8,19 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 #include "Texture.h"
+#include <map>
+#include "Mesh.h"
 
-class Texture;
 
-float horizontal;
-float vertical;
-float depth;
+std::map<int, bool> keyMap;
 
 void OnKeyEvent(GLFWwindow* window, const int key, const int scanCode, const int action, const int mods)
 {
 	if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
 		glfwSetWindowShouldClose(window, 1);
 
-	if (action == GLFW_PRESS && key == GLFW_KEY_W)
-		vertical = 1;
-	if (action == GLFW_RELEASE && key == GLFW_KEY_W)
-		vertical = 0;
-	if (action == GLFW_PRESS && key == GLFW_KEY_S)
-		vertical = -1;
-	if (action == GLFW_RELEASE && key == GLFW_KEY_S)
-		vertical = 0;
-
-	if (action == GLFW_PRESS && key == GLFW_KEY_D)
-		horizontal = -1;
-	if (action == GLFW_RELEASE && key == GLFW_KEY_D)
-		horizontal = 0;
-	if (action == GLFW_PRESS && key == GLFW_KEY_A)
-		horizontal = 1;
-	if (action == GLFW_RELEASE && key == GLFW_KEY_A)
-		horizontal = 0;
-
-	if (action == GLFW_PRESS && key == GLFW_KEY_Q)
-		depth = -1;
-	if (action == GLFW_RELEASE && key == GLFW_KEY_Q)
-		depth = 0;
-	if (action == GLFW_PRESS && key == GLFW_KEY_E)
-		depth = 1;
-	if (action == GLFW_RELEASE && key == GLFW_KEY_E)
-		depth = 0;
+	if (action == GLFW_PRESS) keyMap[key] = true;
+	else if (action == GLFW_RELEASE) keyMap[key] = false;
 }	
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,	const GLchar* message, const void* userParam)
 {
@@ -73,7 +48,9 @@ int main()
 	//input
 	glfwSetKeyCallback(window, OnKeyEvent);
 	glewInit();
-	
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(MessageCallback, 0);
+
 	//Buffer layout
 	BufferLayout layout;
 	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 3 + 2), 0);
@@ -118,15 +95,16 @@ int main()
 	//Cube
 	float cubeVertices[] =
 	{
+		//Front
 		-0.5f, -0.5f, -0.5f,    1.0f, 1.0f, 1.0f,    0.0f, 0.0f,
-		0.5f, -0.5f, -0.5f,		0.0f, 1.0f, 1.0f,    1.0f, 0.0f,
-		0.5f, 0.5f,  -0.5f,     0.0f, 0.0f, 1.0f,    1.0f, 1.0f,
-		-0.5f, 0.5f,  -0.5f,	0.0f, 0.0f, 1.0f,    0.0f, 1.0f,
-
-		-0.5f, -0.5f, 0.5f,     0.0f, 1.0f, 0.0f,    0.0f, 0.0f,
-		0.5f, -0.5f, 0.5f,		1.0f, 0.0f, 0.0f,    1.0f, 0.0f,
-		0.5f, 0.5f,  0.5f,      1.0f, 1.0f, 0.0f,    1.0f, 1.0f,
-		-0.5f, 0.5f,  0.5f,		1.0f, 1.0f, 1.0f,    0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,	0.0f, 1.0f, 1.0f,    1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,    0.0f, 0.0f, 1.0f,    1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,	0.5f, 0.0f, 1.0f,    0.0f, 1.0f,
+		//Back
+		-0.5f, -0.5f,  0.5f,     0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,	1.0f, 0.0f, 0.0f,    0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,    1.0f, 1.0f, 0.0f,    0.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,	1.0f, 0.0f, 0.5f,    1.0f, 1.0f,
 	};
 	unsigned int cubeIndices[] =
 	{
@@ -150,7 +128,7 @@ int main()
 		6, 7, 3
 	};
 	VertexArray cubeVao;
-	VertexBuffer cubeBuffer(cubeVertices, sizeof(float) * 8 * 8, layout);
+	VertexBuffer cubeBuffer(cubeVertices, sizeof(float) * 8 * 24, layout);
 	IndexBuffer cubeIndexBuffer(cubeIndices, 3 * 2 * 6);
 	cubeVao.AddVertexBuffer(&cubeBuffer);
 	cubeVao.SetIndexBuffer(&cubeIndexBuffer);
@@ -162,61 +140,61 @@ int main()
 	auto[vertexSource, fragmentSource] = Shader::ParseShaderFile("shaders/Basic.shader");
 	Shader shader(vertexSource, fragmentSource);
 
-
+	shader.Bind();
 	Texture texture_0("res/img_cheryl.jpg");
 	Texture texture_1("res/img_test.png");
 
 	texture_0.Bind(0);
 	texture_1.Bind(1);
+
 	shader.UploadUniformInt("u_Sampler1", 1);
 
 	//TODO: mesh
+	Mesh suzanne("res/suzanne.obj");
 
+	//Mesh end
 	const float ratio = 1280.0f / 720.f;
 	glm::mat4 projection = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
-
-
-
-	// During init, enable debug output
-	glEnable(GL_DEBUG_OUTPUT);
-	glDebugMessageCallback(MessageCallback, 0);
-	glEnable(GL_DEPTH_TEST);
-
 	glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, -10.0f);
 	const float speed = .1f;
+	float rotateCube = 0.0f;
+
+	//TODO: Renderer init, Mesh abstraction, arbitrary mesh obj loading
 	while (!glfwWindowShouldClose(window))
 	{		
+		shader.Bind();
 		shader.UploadUniformFloat("u_Time", glfwGetTime());
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 
+		float horizontal = keyMap[GLFW_KEY_D] ? -1 : keyMap[GLFW_KEY_A] ? 1 : 0;
+		float vertical = keyMap[GLFW_KEY_S] ? -1 : keyMap[GLFW_KEY_W] ? 1 : 0;
+		float depth = keyMap[GLFW_KEY_Z] ? -1 : keyMap[GLFW_KEY_X] ? 1 : 0;
+		float rotate = keyMap[GLFW_KEY_Q] ? -1 : keyMap[GLFW_KEY_E] ? 1 : 0;
+		rotateCube += rotate;
 		cameraPosition += glm::vec3(horizontal, vertical, depth) * speed;
 		glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		Renderer::SetSceneData(projection * view);
+		
+		Renderer::Begin(projection * view);
 
 		glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0.0f, 0.0f));
 		glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
 		glm::mat4 transform = translation * rotation * scale;
 		Renderer::Render(&shader, &triVao, transform);
+		
 		translation = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 0.0f, 0.0f));
 		rotation = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 		scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
 		transform = translation * rotation * scale;
 		Renderer::Render(&shader, &quadVao, transform);
+		
 		translation = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-		rotation = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+		rotation = glm::rotate(glm::mat4(1.0f), glm::radians(rotateCube), glm::vec3(0.0f, 1.0f, 1.0f));
 		scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
 		transform = translation * rotation * scale;
-		Renderer::Render(&cubeShader, &cubeVao, transform);
+		Renderer::Render(&shader, &cubeVao, transform);
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-
-		GLenum err;
-		if((err = glGetError()) != GL_NO_ERROR)
-		{
-			system("pause");
-		}
 	}
 
 	glfwTerminate();
