@@ -1,27 +1,18 @@
 #SHADER VERTEX
 #version 330 core
 
-in vec2 a_Position;
+in vec3 a_Position;
 in vec3 a_Color;
 layout(location = 2) in vec2 a_TexCoord;
 
 out vec3 f_Color;
 out vec2 f_TexCoord;
 
-uniform float u_Time;
-uniform vec2 u_Offset;
-uniform float u_Scale;
+uniform mat4 u_Transform;
 
 void main()
 {
-	vec2 Pos = a_Position;
-	Pos = vec2(
-		Pos.x * cos(u_Time) - Pos.y * sin(u_Time),
-		Pos.y * cos(u_Time) + Pos.x * sin(u_Time)
-	) * u_Scale;
-	Pos += u_Offset;
-
-	gl_Position = vec4(Pos, 0.0f, 1.0f);
+	gl_Position = u_Transform * vec4(a_Position, 1.0f);
 	f_Color = vec3(a_TexCoord, 0.0f);
 	f_TexCoord = a_TexCoord;
 }
@@ -30,7 +21,9 @@ void main()
 
 #version 330 core
 
-uniform sampler2D u_Sampler;
+uniform sampler2D u_Sampler0;
+uniform sampler2D u_Sampler1;
+uniform float u_Time;
 
 out vec4 o_Color;
 
@@ -39,7 +32,8 @@ in vec3 f_Color;
 
 void main()
 {
-	o_Color = vec4(f_TexCoord, 0.0f, 1.0f);
-	//o_Color = vec4(f_Color, 1.0f);
-	o_Color = texture(u_Sampler, f_TexCoord);
+	vec4 texture0 = texture(u_Sampler0, f_TexCoord);
+	vec4 texture1 = texture(u_Sampler1, f_TexCoord);
+
+	o_Color = mix(texture0, texture1, sin(u_Time) * 0.5 + 0.5);
 }

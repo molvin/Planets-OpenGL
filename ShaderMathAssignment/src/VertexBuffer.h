@@ -25,14 +25,27 @@ private:
 class VertexBuffer
 {
 public:
-	VertexBuffer(const float* data, const int size);
+	VertexBuffer(const float* data, const int size, const BufferLayout& layout);
 	~VertexBuffer();
 	void Bind();
 	void Unbind();
-	void SetLayout(const BufferLayout& layout) { _layout = layout; }
 	BufferLayout& GetLayout() { return _layout; }
 private:
 	GLuint _bufferId;
 	BufferLayout _layout;
 };
+
+class IndexBuffer
+{
+public:
+	IndexBuffer(const unsigned* indices, unsigned count);
+	~IndexBuffer();
+	void Bind();
+	void Unbind();
+	unsigned int GetCount() const { return _indexCount; }
+private:
+	GLuint _indexBufferId;
+	unsigned int _indexCount;
+};
+
 

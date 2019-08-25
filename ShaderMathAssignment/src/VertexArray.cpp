@@ -10,15 +10,15 @@ VertexArray::~VertexArray()
 {
 	glDeleteVertexArrays(1, &_arrayId);
 }
-void VertexArray::Bind()
+void VertexArray::Bind() const
 {
 	glBindVertexArray(_arrayId);
 }
-void VertexArray::Unbind()
+void VertexArray::Unbind() const
 {
 	glBindVertexArray(0);
 }
-void VertexArray::AddVertexBuffer(VertexBuffer* vertexBuffer)
+void VertexArray::AddVertexBuffer(VertexBuffer* vertexBuffer) const
 {
 	Bind();
 	vertexBuffer->Bind();
@@ -31,5 +31,12 @@ void VertexArray::AddVertexBuffer(VertexBuffer* vertexBuffer)
 		glEnableVertexAttribArray(i);
 		glVertexAttribPointer(i, element.size, element.type, element.normalized, element.stride, reinterpret_cast<void*>(element.offset));
 	}	
+}
+void VertexArray::SetIndexBuffer(IndexBuffer* indexBuffer)
+{
+	Bind();
+
+	indexBuffer->Bind();
+	_indexBuffer = indexBuffer;
 }
 
