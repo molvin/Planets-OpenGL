@@ -11,7 +11,6 @@
 #include <map>
 #include "Mesh.h"
 
-
 std::map<int, bool> keyMap;
 
 void OnKeyEvent(GLFWwindow* window, const int key, const int scanCode, const int action, const int mods)
@@ -139,8 +138,8 @@ int main()
 
 	auto[vertexSource, fragmentSource] = Shader::ParseShaderFile("shaders/Basic.shader");
 	Shader shader(vertexSource, fragmentSource);
-
 	shader.Bind();
+	
 	Texture texture_0("res/img_cheryl.jpg");
 	Texture texture_1("res/img_test.png");
 
@@ -150,7 +149,7 @@ int main()
 	shader.UploadUniformInt("u_Sampler1", 1);
 
 	//TODO: mesh
-	Mesh suzanne("res/suzanne.obj");
+	Mesh cubeMesh("res/cube.obj");
 
 	//Mesh end
 	const float ratio = 1280.0f / 720.f;
@@ -159,7 +158,8 @@ int main()
 	const float speed = .1f;
 	float rotateCube = 0.0f;
 
-	//TODO: Renderer init, Mesh abstraction, arbitrary mesh obj loading
+	Renderer::Init();
+
 	while (!glfwWindowShouldClose(window))
 	{		
 		shader.Bind();
@@ -191,7 +191,9 @@ int main()
 		rotation = glm::rotate(glm::mat4(1.0f), glm::radians(rotateCube), glm::vec3(0.0f, 1.0f, 1.0f));
 		scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
 		transform = translation * rotation * scale;
-		Renderer::Render(&shader, &cubeVao, transform);
+		//Renderer::Render(&shader, &cubeVao, transform);
+
+		cubeMesh.Render(&cubeShader, transform);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
