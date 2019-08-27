@@ -3,11 +3,8 @@
 #include <sstream>
 #include "VertexBuffer.h"
 #include "VertexArray.h"
-#include <algorithm>
-#include "Renderer.h"
-#include <iostream>
 #include <iterator>
-
+#include <map>
 
 Mesh::Mesh(const std::string& path)
 {
@@ -104,7 +101,7 @@ void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::
 	//Construct vertices
 	//TODO: get rid of duplicate vertices, and update indices to reflect that
 	const int length = positionIndices.size();
-	//printf("Position count: %d\n", length);
+	std::map<Vertex, int> vertexIndices;
 	for (int i = 0; i < length; i++)
 	{
 		Vertex vertex;
@@ -112,7 +109,10 @@ void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::
 		vertex.uv = tempUvs[uvIndices[i]];
 		vertex.normal = tempNormals[normalIndices[i]];
 		vertices.push_back(vertex);
+
+
 		indices.push_back(i);
+
 
 		//printf("Vertex[%d]: %d/%d/%d\n", i, positionIndices[i], uvIndices[i], normalIndices[i]);
 	}

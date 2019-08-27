@@ -140,7 +140,7 @@ int main()
 		}
 		{
 			glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime() , glm::vec3(0.0f, 1.0f, 0.0f));
 			glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
 			glm::mat4 transform = translation * rotation * scale;
 			Renderer::Render(&cubeShader, cubeMesh.GetVertexArray(), transform);
@@ -152,10 +152,6 @@ int main()
 			glm::mat4 transform = translation * rotation * scale;
 			Renderer::Render(&shader, &quadVao, transform);
 		}
-
-		
-
-
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
