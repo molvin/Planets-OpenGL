@@ -92,46 +92,8 @@ int main()
 	triVao.SetIndexBuffer(&triIndexBuffer);
 	triVao.Unbind();
 	//Cube
-	float cubeVertices[] =
-	{
-		//Front
-		-0.5f, -0.5f, -0.5f,    1.0f, 1.0f, 1.0f,    0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,	0.0f, 1.0f, 1.0f,    1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,    0.0f, 0.0f, 1.0f,    1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,	0.5f, 0.0f, 1.0f,    0.0f, 1.0f,
-		//Back
-		-0.5f, -0.5f,  0.5f,     0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,	1.0f, 0.0f, 0.0f,    0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,    1.0f, 1.0f, 0.0f,    0.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,	1.0f, 0.0f, 0.5f,    1.0f, 1.0f,
-	};
-	unsigned int cubeIndices[] =
-	{
-		// front
-		0, 1, 2,
-		2, 3, 0,
-		// right
-		1, 5, 6,
-		6, 2, 1,
-		// back
-		7, 6, 5,
-		5, 4, 7,
-		// left
-		4, 0, 3,
-		3, 7, 4,
-		// bottom
-		4, 5, 1,
-		1, 0, 4,
-		// top
-		3, 2, 6,
-		6, 7, 3
-	};
-	VertexArray cubeVao;
-	VertexBuffer cubeBuffer(cubeVertices, sizeof(float) * 8 * 24, layout);
-	IndexBuffer cubeIndexBuffer(cubeIndices, 3 * 2 * 6);
-	cubeVao.AddVertexBuffer(&cubeBuffer);
-	cubeVao.SetIndexBuffer(&cubeIndexBuffer);
-	cubeVao.Unbind();
+	Mesh cubeMesh("res/suzanne.obj");
+	cubeMesh.GetVertexArray()->Unbind();
 	//Shader
 	auto[cubeVertexSource, cubeFragmentSource] = Shader::ParseShaderFile("shaders/cube.shader");
 	Shader cubeShader(cubeVertexSource, cubeFragmentSource);
@@ -139,19 +101,14 @@ int main()
 	auto[vertexSource, fragmentSource] = Shader::ParseShaderFile("shaders/Basic.shader");
 	Shader shader(vertexSource, fragmentSource);
 	shader.Bind();
-	
-	Texture texture_0("res/img_cheryl.jpg");
-	Texture texture_1("res/img_test.png");
+
+	Texture texture_0("res/img_test.png");
+	Texture texture_1("res/img_cheryl.jpg");
 
 	texture_0.Bind(0);
 	texture_1.Bind(1);
 
 	shader.UploadUniformInt("u_Sampler1", 1);
-
-	//TODO: mesh
-	Mesh cubeMesh("res/cube.obj");
-
-	//Mesh end
 	const float ratio = 1280.0f / 720.f;
 	glm::mat4 projection = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
 	glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, -10.0f);
@@ -161,7 +118,7 @@ int main()
 	Renderer::Init();
 
 	while (!glfwWindowShouldClose(window))
-	{		
+	{
 		shader.Bind();
 		shader.UploadUniformFloat("u_Time", glfwGetTime());
 
@@ -172,28 +129,32 @@ int main()
 		rotateCube += rotate;
 		cameraPosition += glm::vec3(horizontal, vertical, depth) * speed;
 		glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		
+
 		Renderer::Begin(projection * view);
+		{
+			glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0.0f, 0.0f));
+			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+			glm::mat4 transform = translation * rotation * scale;
+			Renderer::Render(&shader, &triVao, transform);
+		}
+		{
+			glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+			glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+			glm::mat4 transform = translation * rotation * scale;
+			Renderer::Render(&cubeShader, cubeMesh.GetVertexArray(), transform);
+		}
+		{
+			glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 0.0f, 0.0f));
+			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+			glm::mat4 transform = translation * rotation * scale;
+			Renderer::Render(&shader, &quadVao, transform);
+		}
 
-		glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0.0f, 0.0f));
-		glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
-		glm::mat4 transform = translation * rotation * scale;
-		Renderer::Render(&shader, &triVao, transform);
 		
-		translation = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 0.0f, 0.0f));
-		rotation = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-		scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
-		transform = translation * rotation * scale;
-		Renderer::Render(&shader, &quadVao, transform);
-		
-		translation = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-		rotation = glm::rotate(glm::mat4(1.0f), glm::radians(rotateCube), glm::vec3(0.0f, 1.0f, 1.0f));
-		scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
-		transform = translation * rotation * scale;
-		//Renderer::Render(&shader, &cubeVao, transform);
 
-		cubeMesh.Render(&cubeShader, transform);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

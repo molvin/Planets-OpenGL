@@ -18,8 +18,8 @@ void Renderer::Begin(const glm::mat4& viewProjectionMatrix)
 }
 void Renderer::Render(const Shader* shader, const VertexArray* vao, const glm::mat4& transform)
 {
-	shader->Bind();
 	vao->Bind();
+	shader->Bind();
 
 	shader->UploadUniformMat4("u_Transform", _sceneData->viewProjection * transform);
 

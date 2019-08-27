@@ -6,43 +6,24 @@
 #include <algorithm>
 #include "Renderer.h"
 #include <iostream>
+#include <iterator>
+
 
 Mesh::Mesh(const std::string& path)
 {
-	std::vector<glm::vec3> vertices;
-	std::vector<glm::vec2> uvs;
-	std::vector<glm::vec3> normals;
+	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 
-	LoadObj(path, vertices, uvs, normals, indices);
+	LoadObj(path, vertices, indices);
 
-	unsigned int cubeIndices[] =
-	{
-		// front
-		0, 1, 2,
-		2, 3, 0,
-		// right
-		1, 5, 6,
-		6, 2, 1,
-		// back
-		7, 6, 5,
-		5, 4, 7,
-		// left
-		4, 0, 3,
-		3, 7, 4,
-		// bottom
-		4, 5, 1,
-		1, 0, 4,
-		// top
-		3, 2, 6,
-		6, 7, 3
-	};
 	BufferLayout layout;
-	layout.AddLayoutElement(3, GL_FLOAT, false, 0, 0);
+	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), 0);
+	layout.AddLayoutElement(2, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * 3);
+	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * (3 + 2));
 
 	_vao = new VertexArray();
-	_vbo = new VertexBuffer(&vertices[0].x, sizeof(float) * 8 * 24, layout);
-	_ibo = new IndexBuffer(cubeIndices, 3 * 2 * 6);
+	_vbo = new VertexBuffer(&vertices[0].position.x, sizeof(float) * (3 + 2 + 3) * vertices.size(), layout);
+	_ibo = new IndexBuffer(&indices[0], indices.size());
 	_vao->AddVertexBuffer(_vbo);
 	_vao->SetIndexBuffer(_ibo);
 }
@@ -53,67 +34,88 @@ Mesh::~Mesh()
 	delete(_ibo);
 }
 
-void Mesh::Render(const Shader* shader, const glm::mat4& transform) const
+void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices)
 {
-	Renderer::Render(shader, _vao, transform);
-}
-
-void Mesh::LoadObj(const std::string& path, std::vector<glm::vec3>& vertices, std::vector<glm::vec2>& uvs, std::vector<glm::vec3>& normals, std::vector<unsigned int>& indices)
-{
-	std::ifstream file(path);
+	std::ifstream file(path, std::ios::in);
 	std::string line;
-	std::stringstream ss;
 
-	while (std::getline(file, line))
+	std::vector<int> positionIndices;
+	std::vector<int> uvIndices;
+	std::vector<int> normalIndices;
+
+	std::vector<glm::vec3> tempPositions;
+	std::vector<glm::vec2> tempUvs;
+	std::vector<glm::vec3> tempNormals;
+
+	while(std::getline(file, line))
 	{
-		ss << line;
+		if (line.substr(0, 2) == "v ") 
+		{
+			std::istringstream vertStream(line.substr(2));
+			glm::vec3 position;
+			float x, y, z;
+			vertStream >> x; vertStream >> y; vertStream >> z;
+			position = glm::vec3(x, y, z);
+			tempPositions.push_back(position);
 
-		if (line.find("vn") == 0)
-		{
-			float normal[3];
-			ReadValuesFromLine(ss, normal, 3);
-			printf("Normals(x: %f, y: %f, z: %f) \n", normal[0], normal[1], normal[2]);
-			normals.emplace_back(normal[0], normal[1], normal[2]);
+			//printf("Vertex(x: %f, y: %f, z: %f)\n", x, y, z);
 		}
-		else if (line.rfind("vt") == 0)
+		else if (line.substr(0, 2) == "vt")
 		{
-			float uv[2];
-			ReadValuesFromLine(ss, uv, 2);
-			printf("UVs(u: %f, v: %f) \n", uv[0], uv[1]);
-			uvs.emplace_back(uv[0], uv[1]);
-		}
-		else if (line.rfind('v') == 0)
-		{
-			float vertex[3];
-			ReadValuesFromLine(ss, vertex, 3);
+			std::istringstream uvStream(line.substr(3));
+			glm::vec2 uv;
+			float u, v;
+			uvStream >> u; uvStream >> v;
+			uv = glm::vec2(u, v);
+			tempUvs.push_back(uv);
 
-			printf("Vertex(x: %f, y: %f, z: %f) \n", vertex[0], vertex[1], vertex[2]);
-			vertices.emplace_back(vertex[0] - 1, vertex[1] - 1, vertex[2] - 1);
+			//printf("UV(u: %f, v: %f)\n", u, v);
 		}
-		else if (line.rfind('f') == 0)
+		else if (line.substr(0, 2) == "vn")
 		{
-			//unsigned int index[9];
-			//ReadValuesFromLine(ss, index, 9);
-			//printf("Indices(%d/%d/%d/%d/%d/%d/%d/%d/%d) \n", index[0], index[1], index[2], index[3], index[4], index[5], index[6], index[7], index[8]);
-			
+			std::istringstream normalStream(line.substr(3));
+			glm::vec3 normal;
+			float x, y, z;
+			normalStream >> x; normalStream >> y; normalStream >> z;
+			normal = glm::vec3(x, y, z);
+			tempNormals.push_back(normal);
+
+			//printf("Normal(x: %f, y: %f, z: %f)\n", x, y, z);
 		}
-		ss.clear();
+		else if (line.substr(0, 2) == "f ")
+		{
+			int a, b, c; // position index
+			int A, B, C; // uv index
+			int d, f, g; // normal index
+			const char* chh = line.c_str();
+			sscanf(chh, "f %i/%i/%i %i/%i/%i %i/%i/%i", &a, &A, &d, &b, &B, &f, &c, &C, &g);
+			a--; b--; c--;
+			A--; B--; C--;
+			d--; f--; g--;
+			positionIndices.push_back(a); uvIndices.push_back(A); normalIndices.push_back(d);
+			positionIndices.push_back(b); uvIndices.push_back(B); normalIndices.push_back(f);
+			positionIndices.push_back(c); uvIndices.push_back(C); normalIndices.push_back(g);
+
+			//printf("Face index: %d, %d, %d\n", a, b, c);
+			//printf("UV index: %d, %d, %d\n", A, B, C);
+			//printf("Normal index: %d, %d, %d\n", d, f, g);
+		}
 	}
-}
-
-void Mesh::ReadValuesFromLine(std::stringstream& ss, float* values, const int count)
-{
-	std::string temp;
-	float f;
-	int i = 0;
-	while (!ss.eof() && i < count)
+	//Construct vertices
+	//TODO: get rid of duplicate vertices, and update indices to reflect that
+	const int length = positionIndices.size();
+	//printf("Position count: %d\n", length);
+	for (int i = 0; i < length; i++)
 	{
-		ss >> temp;
-		if (std::stringstream(temp) >> f)
-		{
-			values[i] = f;
-			i++;
-		}
-		temp = "";
+		Vertex vertex;
+		vertex.position = tempPositions[positionIndices[i]];
+		vertex.uv = tempUvs[uvIndices[i]];
+		vertex.normal = tempNormals[normalIndices[i]];
+		vertices.push_back(vertex);
+		indices.push_back(i);
+
+		//printf("Vertex[%d]: %d/%d/%d\n", i, positionIndices[i], uvIndices[i], normalIndices[i]);
 	}
+
+
 }

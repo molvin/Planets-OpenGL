@@ -72,6 +72,7 @@ Shader::Shader(const std::string& vertexSource, const std::string& fragSource)
 		return;
 	}
 
+	printf("Shader compiled successfully\n");
 	glDetachShader(_programId, vertexShader);
 	glDetachShader(_programId, fragmentShader);
 }
