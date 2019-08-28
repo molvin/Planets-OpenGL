@@ -8,6 +8,7 @@
 #include <glm/mat4x2.hpp>
 #include "Material.h"
 #include "Transform.h"
+#include <sstream>
 
 class BufferLayout;
 class Shader;
@@ -17,6 +18,20 @@ struct Vertex
 	glm::vec3 position;
 	glm::vec2 uv;
 	glm::vec3 normal;
+
+	std::string ToString() const
+	{
+		std::stringstream ss;
+		ss << position.x;
+		ss << position.y;
+		ss << position.z;
+		ss << uv.x;
+		ss << uv.y;
+		ss << normal.x;
+		ss << normal.y;
+		ss << normal.z;
+		return ss.str();
+	}
 };
 
 

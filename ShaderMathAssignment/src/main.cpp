@@ -13,8 +13,10 @@
 #include "Material.h"
 #include "Transform.h"
 #include "Camera.h"
+#include "../Input.h"
 
 //TODO: Input system
+//TODO: folder structure and namespaces
 
 int keyMap[GLFW_KEY_LAST];
 
@@ -33,8 +35,8 @@ int main()
 	const int screenHeight = 720;
 	Window window(screenWidth, screenHeight, "GLFW window");
 	//Input
-	glfwSetKeyCallback(window.GetWindow(), OnKeyEvent);
-
+	//glfwSetKeyCallback(window.GetWindow(), OnKeyEvent);
+	Input::Init(window.GetWindow());
 	glewInit();
 	glfwSwapInterval(0);
 	//Buffer layout
@@ -105,9 +107,9 @@ int main()
 		triMaterial.SetUniformFloat("u_Time", glfwGetTime());
 		quadMaterial.SetUniformFloat("u_Time",glfwGetTime() * 3);
 
-		float horizontal = keyMap[GLFW_KEY_D] ? -1 : keyMap[GLFW_KEY_A] ? 1 : 0;
-		float vertical = keyMap[GLFW_KEY_S] ? -1 : keyMap[GLFW_KEY_W] ? 1 : 0;
-		float depth = keyMap[GLFW_KEY_Z] ? -1 : keyMap[GLFW_KEY_X] ? 1 : 0;
+		float horizontal = Input::GetKey(GLFW_KEY_D) ? -1 : Input::GetKey(GLFW_KEY_A) ? 1 : 0;
+		float vertical = Input::GetKey(GLFW_KEY_S) ? -1 : Input::GetKey(GLFW_KEY_W) ? 1 : 0;
+		float depth = Input::GetKey(GLFW_KEY_Z) ? -1 : Input::GetKey(GLFW_KEY_X) ? 1 : 0;
 		camera.Position += glm::vec3(horizontal, vertical, depth) * 3.0f * deltaTime;
 
 		Renderer::Begin(projection * camera.GetViewMatrix());
@@ -123,6 +125,8 @@ int main()
 		float currentTime = glfwGetTime();
 		deltaTime = currentTime - time;
 		time = currentTime;
+
+		Input::Update();
 	}
 	glfwTerminate();
 	return 0;

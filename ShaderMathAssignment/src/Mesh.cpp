@@ -5,6 +5,7 @@
 #include "VertexArray.h"
 #include <iterator>
 #include <map>
+#include <unordered_map>
 
 Mesh::Mesh(const std::string& path)
 {
@@ -64,10 +65,10 @@ void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::
 	{
 		if (line.substr(0, 2) == "v ") 
 		{
-			std::istringstream vertStream(line.substr(2));
+			std::istringstream positionStream(line.substr(2));
 			glm::vec3 position;
 			float x, y, z;
-			vertStream >> x; vertStream >> y; vertStream >> z;
+			positionStream >> x; positionStream >> y; positionStream >> z;
 			position = glm::vec3(x, y, z);
 			tempPositions.push_back(position);
 		}
@@ -105,26 +106,25 @@ void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::
 		}
 	}
 	//Construct vertices
-	//TODO: get rid of duplicate vertices, and update indices to reflect that
 	const int length = positionIndices.size();
 
 
-	std::map<Vertex, int> vertexIndices;
+	std::unordered_map<std::string, int> vertexIndices;
 
 	for (int i = 0; i < length; i++)
 	{
-		Vertex vertex;
-		vertex.position = tempPositions[positionIndices[i]];
-		vertex.uv = tempUvs[uvIndices[i]];
-		vertex.normal = tempNormals[normalIndices[i]];
+		Vertex vertex
+		{ 
+			tempPositions[positionIndices[i]],
+			tempUvs[uvIndices[i]],
+			tempNormals[normalIndices[i]]
+		};
 		vertices.push_back(vertex);
+		std::string key = vertex.ToString();	//Probably not the best way to hash a vertex
+		if (vertexIndices.find(key) == vertexIndices.end())
+			vertexIndices[key] = i;
 
-
-		indices.push_back(i);
-
-		//vertexIndices[vertex] = i;
-
-		//printf("Vertex[%d]: %d/%d/%d\n", i, positionIndices[i], uvIndices[i], normalIndices[i]);
+		indices.push_back(vertexIndices[key]);
 	}
 
 
