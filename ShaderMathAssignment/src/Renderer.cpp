@@ -3,12 +3,25 @@
 #include "Shader.h"
 #include "VertexBuffer.h"
 #include <glm/glm.hpp>
+#include "Material.h"
+#include <glm/glm.hpp>
+
+
+void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
+{
+	fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+		(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+		type, severity, message);
+}
 
 Renderer::SceneData* Renderer::_sceneData = new SceneData;
 
 void Renderer::Init()
 {
 	glEnable(GL_DEPTH_TEST);
+
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(MessageCallback, 0);
 }
 void Renderer::Begin(const glm::mat4& viewProjectionMatrix)
 {
@@ -16,12 +29,12 @@ void Renderer::Begin(const glm::mat4& viewProjectionMatrix)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	_sceneData->viewProjection = viewProjectionMatrix;
 }
-void Renderer::Render(const Shader* shader, const VertexArray* vao, const glm::mat4& transform)
+void Renderer::Render(Material* material, const VertexArray* vao, const glm::mat4& transform)
 {
 	vao->Bind();
-	shader->Bind();
+	material->Bind();
 
-	shader->UploadUniformMat4("u_Transform", _sceneData->viewProjection * transform);
+	material->GetShader()->UploadUniformMat4("u_Transform", _sceneData->viewProjection * transform);
 
 	glDrawElements(GL_TRIANGLES, vao->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 }

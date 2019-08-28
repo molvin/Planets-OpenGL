@@ -2,7 +2,6 @@
 #include <GLFW/glfw3.h>
 #include "Shader.h"
 #include "VertexBuffer.h"
-#include "VertexArray.h"
 #include "Renderer.h"
 #include "glm/glm.hpp"
 #include <glm/ext/matrix_transform.hpp>
@@ -10,8 +9,14 @@
 #include "Texture.h"
 #include <map>
 #include "Mesh.h"
+#include "Window.h"
+#include "Material.h"
+#include "Transform.h"
+#include "Camera.h"
 
-std::map<int, bool> keyMap;
+//TODO: Input system
+
+int keyMap[GLFW_KEY_LAST];
 
 void OnKeyEvent(GLFWwindow* window, const int key, const int scanCode, const int action, const int mods)
 {
@@ -21,40 +26,23 @@ void OnKeyEvent(GLFWwindow* window, const int key, const int scanCode, const int
 	if (action == GLFW_PRESS) keyMap[key] = true;
 	else if (action == GLFW_RELEASE) keyMap[key] = false;
 }	
-void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,	const GLchar* message, const void* userParam)
-{
-	fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-		(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-		type, severity, message);
-}
-
-
 int main()
 {
+	//Window
 	const int screenWidth = 1280;
 	const int screenHeight = 720;
+	Window window(screenWidth, screenHeight, "GLFW window");
+	//Input
+	glfwSetKeyCallback(window.GetWindow(), OnKeyEvent);
 
-	if (!glfwInit())
-		return -1;
-
-	GLFWwindow* window = glfwCreateWindow(screenWidth , screenHeight, "GLFW Window", nullptr, nullptr);
-	if (!window)
-	{
-		glfwTerminate();
-		return -1;
-	}
-	glfwMakeContextCurrent(window);
-	//input
-	glfwSetKeyCallback(window, OnKeyEvent);
 	glewInit();
-	glEnable(GL_DEBUG_OUTPUT);
-	glDebugMessageCallback(MessageCallback, 0);
-
+	glfwSwapInterval(0);
 	//Buffer layout
 	BufferLayout layout;
 	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 3 + 2), 0);
 	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 3 + 2),sizeof(float) * 3);
 	layout.AddLayoutElement(2, GL_FLOAT, false, sizeof(float) * (3 + 3 + 2), sizeof(float) * (3 + 3));
+	//Shapes
 	//Quad
 	float quadVertices[] =
 	{
@@ -68,12 +56,8 @@ int main()
 		0, 1, 2,
 		2, 3, 0
 	};
-	VertexArray quadVao;
-	VertexBuffer quadBuffer(quadVertices, sizeof(float) * 8 * 4, layout);
-	IndexBuffer quadIndexBuffer(quadIndices, 6);
-	quadVao.AddVertexBuffer(&quadBuffer);
-	quadVao.SetIndexBuffer(&quadIndexBuffer);
-	quadVao.Unbind();
+	Mesh quadMesh(quadVertices, sizeof(float) * 8, 4, quadIndices, 6, layout);
+	quadMesh.GetTransform()->Position = glm::vec3(3.0f, 0.0f, 0.0f);
 	//Tri
 	float triVertices[] =
 	{
@@ -85,77 +69,61 @@ int main()
 	{
 		0,1,2
 	};
-	VertexArray triVao;
-	VertexBuffer triBuffer(triVertices, sizeof(float) * 8 * 3, layout);
-	IndexBuffer triIndexBuffer(triIndices, 3);
-	triVao.AddVertexBuffer(&triBuffer);
-	triVao.SetIndexBuffer(&triIndexBuffer);
-	triVao.Unbind();
-	//Cube
-	Mesh cubeMesh("res/suzanne.obj");
-	cubeMesh.GetVertexArray()->Unbind();
+	Mesh triMesh(triVertices, sizeof(float) * 8, 3, triIndices, 3, layout);
+	triMesh.GetTransform()->Position = glm::vec3(-3.0f, 0.0f, 0.0f);
+	//Suzanne
+	Mesh mesh("res/suzanne.obj");
 	//Shader
 	auto[cubeVertexSource, cubeFragmentSource] = Shader::ParseShaderFile("shaders/cube.shader");
 	Shader cubeShader(cubeVertexSource, cubeFragmentSource);
-
 	auto[vertexSource, fragmentSource] = Shader::ParseShaderFile("shaders/Basic.shader");
 	Shader shader(vertexSource, fragmentSource);
-	shader.Bind();
-
-	Texture texture_0("res/img_test.png");
+	shader.Bind();	
+	//Textures
+	Texture texture_0("res/uv_test.jpg");
 	Texture texture_1("res/img_cheryl.jpg");
-
 	texture_0.Bind(0);
 	texture_1.Bind(1);
-
 	shader.UploadUniformInt("u_Sampler1", 1);
+	//Matrices
 	const float ratio = 1280.0f / 720.f;
 	glm::mat4 projection = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
-	glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, -10.0f);
-	const float speed = .1f;
-	float rotateCube = 0.0f;
-
+	//Materials
+	Material triMaterial(&shader);
+	Material quadMaterial(&shader);
+	Material material3D(&cubeShader);
+	//Main loop
 	Renderer::Init();
-
-	while (!glfwWindowShouldClose(window))
+	//Camera
+	Camera camera;
+	camera.Position = glm::vec3(0.0f, 0.0f, -10.0f);
+	//Misc
+	float time = glfwGetTime();
+	float deltaTime = 0.016f;
+	while (window.Open())
 	{
-		shader.Bind();
-		shader.UploadUniformFloat("u_Time", glfwGetTime());
+		triMaterial.SetUniformFloat("u_Time", glfwGetTime());
+		quadMaterial.SetUniformFloat("u_Time",glfwGetTime() * 3);
 
 		float horizontal = keyMap[GLFW_KEY_D] ? -1 : keyMap[GLFW_KEY_A] ? 1 : 0;
 		float vertical = keyMap[GLFW_KEY_S] ? -1 : keyMap[GLFW_KEY_W] ? 1 : 0;
 		float depth = keyMap[GLFW_KEY_Z] ? -1 : keyMap[GLFW_KEY_X] ? 1 : 0;
-		float rotate = keyMap[GLFW_KEY_Q] ? -1 : keyMap[GLFW_KEY_E] ? 1 : 0;
-		rotateCube += rotate;
-		cameraPosition += glm::vec3(horizontal, vertical, depth) * speed;
-		glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		camera.Position += glm::vec3(horizontal, vertical, depth) * 3.0f * deltaTime;
 
-		Renderer::Begin(projection * view);
-		{
-			glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0.0f, 0.0f));
-			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-			glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
-			glm::mat4 transform = translation * rotation * scale;
-			Renderer::Render(&shader, &triVao, transform);
-		}
-		{
-			glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime() , glm::vec3(0.0f, 1.0f, 0.0f));
-			glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
-			glm::mat4 transform = translation * rotation * scale;
-			Renderer::Render(&cubeShader, cubeMesh.GetVertexArray(), transform);
-		}
-		{
-			glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 0.0f, 0.0f));
-			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-			glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
-			glm::mat4 transform = translation * rotation * scale;
-			Renderer::Render(&shader, &quadVao, transform);
-		}
-		glfwSwapBuffers(window);
+		Renderer::Begin(projection * camera.GetViewMatrix());
+	
+		Renderer::Render(&triMaterial, triMesh.GetVertexArray(), triMesh.GetTransform()->GetMatrix());
+		mesh.GetTransform()->Rotate(deltaTime, glm::vec3(0.0f, 1.0f, 0.0f));
+		Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());	
+		Renderer::Render(&quadMaterial, quadMesh.GetVertexArray(), quadMesh.GetTransform()->GetMatrix());
+	
+		glfwSwapBuffers(window.GetWindow());
 		glfwPollEvents();
-	}
 
+		float currentTime = glfwGetTime();
+		deltaTime = currentTime - time;
+		time = currentTime;
+	}
 	glfwTerminate();
 	return 0;
 }

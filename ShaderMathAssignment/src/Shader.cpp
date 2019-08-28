@@ -4,15 +4,14 @@
 #include <fstream>
 #include "glm/gtc/type_ptr.hpp"
 
-//TODO: Cache uniform names, limit gl calls
-
 Shader::Shader(const std::string& vertexSource, const std::string& fragSource)
 {
 	const GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	const GLchar* source = vertexSource.c_str();
 	glShaderSource(vertexShader, 1, &source, nullptr);
 	glCompileShader(vertexShader);
-
+	//delete[] source;
+	
 	GLint compiled = 0;
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &compiled);
 
@@ -23,7 +22,6 @@ Shader::Shader(const std::string& vertexSource, const std::string& fragSource)
 		std::vector<GLchar> infoLog(length);
 		glGetShaderInfoLog(vertexShader, length, &length, &infoLog[0]);
 
-		//TODO: add logger for error logging
 		printf("Error compiling vertex shader: \n%s", &infoLog[0]);
 		return;
 	}
@@ -32,7 +30,8 @@ Shader::Shader(const std::string& vertexSource, const std::string& fragSource)
 	source = fragSource.c_str();
 	glShaderSource(fragmentShader, 1, &source, nullptr);
 	glCompileShader(fragmentShader);
-
+	//delete[] source;
+	
 	compiled = 0;
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compiled);
 
@@ -43,7 +42,6 @@ Shader::Shader(const std::string& vertexSource, const std::string& fragSource)
 		std::vector<GLchar> infoLog(length);
 		glGetShaderInfoLog(fragmentShader, length, &length, &infoLog[0]);
 
-		//TODO: add logger for error logging
 		printf("Error compiling fragment shader: \n%s", &infoLog[0]);
 		return;
 	}
@@ -67,7 +65,6 @@ Shader::Shader(const std::string& vertexSource, const std::string& fragSource)
 		glDeleteShader(vertexShader);
 		glDeleteShader(fragmentShader);
 
-		//TODO: add logger for error logging
 		printf("Error linking shader program: \n%s", &infoLog[0]);
 		return;
 	}
@@ -75,6 +72,8 @@ Shader::Shader(const std::string& vertexSource, const std::string& fragSource)
 	printf("Shader compiled successfully\n");
 	glDetachShader(_programId, vertexShader);
 	glDetachShader(_programId, fragmentShader);
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
 }
 Shader::~Shader()
 {
@@ -91,23 +90,29 @@ void Shader::Unbind() const
 
 void Shader::UploadUniformFloat(const std::string& name, const float value) const
 {
-	const GLint uniform = glGetUniformLocation(_programId, name.c_str());
-	glUniform1f(uniform, value);
+	glUniform1f(GetUniformLocation(name), value);
 }
-void Shader::UploadUniformVec2(const std::string& name, float x, float y) const
+void Shader::UploadUniformVec2(const std::string& name, glm::vec2 vec) const
 {
-	const GLint uniform = glGetUniformLocation(_programId, name.c_str());
-	glUniform2f(uniform, x, y);
+	glUniform2f(GetUniformLocation(name), vec.x, vec.y);
 }
 void Shader::UploadUniformMat4(const std::string& name, glm::mat4 mat) const
 {
-	const GLint uniform = glGetUniformLocation(_programId, name.c_str());
-	glUniformMatrix4fv(uniform, 1, GL_FALSE, glm::value_ptr(mat));
+	glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(mat));
 }
 void Shader::UploadUniformInt(const std::string& name, int i) const
 {
-	const GLint uniform = glGetUniformLocation(_programId, name.c_str());
-	glUniform1i(uniform, i);
+	glUniform1i(GetUniformLocation(name), i);
+}
+
+GLint Shader::GetUniformLocation(const std::string& name) const
+{
+	if (_uniformLocations.find(name) != _uniformLocations.end())
+		return _uniformLocations[name];
+
+	const GLint location = glGetUniformLocation(_programId, name.c_str());
+	_uniformLocations[name] = location;
+	return location;
 }
 
 std::tuple<std::string, std::string> Shader::ParseShaderFile(const std::string& path)

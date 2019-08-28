@@ -13,17 +13,21 @@ Mesh::Mesh(const std::string& path)
 
 	LoadObj(path, vertices, indices);
 
+	//TODO: should be set by the obj loader
 	BufferLayout layout;
 	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), 0);
 	layout.AddLayoutElement(2, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * 3);
 	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * (3 + 2));
 
-	_vao = new VertexArray();
-	_vbo = new VertexBuffer(&vertices[0].position.x, sizeof(float) * (3 + 2 + 3) * vertices.size(), layout);
-	_ibo = new IndexBuffer(&indices[0], indices.size());
-	_vao->AddVertexBuffer(_vbo);
-	_vao->SetIndexBuffer(_ibo);
+	Init(&vertices[0].position.x, sizeof(float) * (3 + 2 + 3), vertices.size(), &indices[0], indices.size(), layout);
 }
+
+Mesh::Mesh(float* vertices, const unsigned vertexSize, const unsigned vertexCount, unsigned* indices, const unsigned indexCount, const BufferLayout& layout)
+{
+	
+	Init(vertices, vertexSize, vertexCount, indices, indexCount, layout);
+}
+
 Mesh::~Mesh()
 {
 	delete(_vao);
@@ -31,8 +35,20 @@ Mesh::~Mesh()
 	delete(_ibo);
 }
 
+void Mesh::Init(float* vertices, const unsigned int vertexSize, const unsigned int vertexCount, unsigned int * indices, const unsigned int indexCount, const BufferLayout& layout)
+{
+	_vao = new VertexArray();
+	_vbo = new VertexBuffer(&vertices[0], vertexSize * vertexCount, layout);
+	_ibo = new IndexBuffer(&indices[0], indexCount);
+	_vao->AddVertexBuffer(_vbo);
+	_vao->SetIndexBuffer(_ibo);
+	_vao->Unbind();
+}
+
 void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices)
 {
+	//TODO: support more obj files, only require position, not normal/uv
+	
 	std::ifstream file(path, std::ios::in);
 	std::string line;
 
@@ -54,8 +70,6 @@ void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::
 			vertStream >> x; vertStream >> y; vertStream >> z;
 			position = glm::vec3(x, y, z);
 			tempPositions.push_back(position);
-
-			//printf("Vertex(x: %f, y: %f, z: %f)\n", x, y, z);
 		}
 		else if (line.substr(0, 2) == "vt")
 		{
@@ -65,8 +79,6 @@ void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::
 			uvStream >> u; uvStream >> v;
 			uv = glm::vec2(u, v);
 			tempUvs.push_back(uv);
-
-			//printf("UV(u: %f, v: %f)\n", u, v);
 		}
 		else if (line.substr(0, 2) == "vn")
 		{
@@ -76,8 +88,6 @@ void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::
 			normalStream >> x; normalStream >> y; normalStream >> z;
 			normal = glm::vec3(x, y, z);
 			tempNormals.push_back(normal);
-
-			//printf("Normal(x: %f, y: %f, z: %f)\n", x, y, z);
 		}
 		else if (line.substr(0, 2) == "f ")
 		{
@@ -92,16 +102,15 @@ void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::
 			positionIndices.push_back(a); uvIndices.push_back(A); normalIndices.push_back(d);
 			positionIndices.push_back(b); uvIndices.push_back(B); normalIndices.push_back(f);
 			positionIndices.push_back(c); uvIndices.push_back(C); normalIndices.push_back(g);
-
-			//printf("Face index: %d, %d, %d\n", a, b, c);
-			//printf("UV index: %d, %d, %d\n", A, B, C);
-			//printf("Normal index: %d, %d, %d\n", d, f, g);
 		}
 	}
 	//Construct vertices
 	//TODO: get rid of duplicate vertices, and update indices to reflect that
 	const int length = positionIndices.size();
+
+
 	std::map<Vertex, int> vertexIndices;
+
 	for (int i = 0; i < length; i++)
 	{
 		Vertex vertex;
@@ -113,6 +122,7 @@ void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::
 
 		indices.push_back(i);
 
+		//vertexIndices[vertex] = i;
 
 		//printf("Vertex[%d]: %d/%d/%d\n", i, positionIndices[i], uvIndices[i], normalIndices[i]);
 	}

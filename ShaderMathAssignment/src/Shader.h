@@ -3,6 +3,7 @@
 #include <tuple>
 #include <GL/glew.h>
 #include <glm/detail/type_mat4x4.hpp>
+#include <map>
 
 class Shader
 {
@@ -13,11 +14,13 @@ public:
 	void Unbind() const;
 	//Uniform setters
 	void UploadUniformFloat(const std::string& name, float value) const;
-	void UploadUniformVec2(const std::string& name, float x, float y) const;
+	void UploadUniformVec2(const std::string& name, glm::vec2 vec) const;
 	void UploadUniformMat4(const std::string& name, glm::mat4 mat) const;
 	void UploadUniformInt(const std::string& name, int i) const;
+	GLint GetUniformLocation(const std::string& name) const;
 	static std::tuple<std::string, std::string> ParseShaderFile(const std::string& path);
 private:
 	GLuint _programId;
+	mutable std::map<std::string, GLint> _uniformLocations;
 };
 
