@@ -151,7 +151,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Input.cpp" />
+    <ClCompile Include="src\ImGUI\imgui.cpp" />
+    <ClCompile Include="src\ImGUI\imgui_demo.cpp" />
+    <ClCompile Include="src\ImGUI\imgui_draw.cpp" />
+    <ClCompile Include="src\ImGUI\imgui_impl_glfw.cpp" />
+    <ClCompile Include="src\ImGUI\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="src\ImGUI\imgui_widgets.cpp" />
+    <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
@@ -165,7 +171,15 @@
     <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Input.h" />
+    <ClInclude Include="src\ImGUI\imconfig.h" />
+    <ClInclude Include="src\ImGUI\imgui.h" />
+    <ClInclude Include="src\ImGUI\imgui_impl_glfw.h" />
+    <ClInclude Include="src\ImGUI\imgui_impl_opengl3.h" />
+    <ClInclude Include="src\ImGUI\imgui_internal.h" />
+    <ClInclude Include="src\ImGUI\imstb_rectpack.h" />
+    <ClInclude Include="src\ImGUI\imstb_textedit.h" />
+    <ClInclude Include="src\ImGUI\imstb_truetype.h" />
+    <ClInclude Include="src\Input.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Mesh.h" />

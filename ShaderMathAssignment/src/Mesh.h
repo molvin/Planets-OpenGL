@@ -43,6 +43,7 @@ public:
 	Mesh(float* vertices, const unsigned int vertexSize, const unsigned int vertexCount, unsigned int* indices, const unsigned int indexCount, const BufferLayout& layout);
 	~Mesh();
 	void Init(float* vertices, const unsigned int vertexSize, const unsigned int vertexCount, unsigned int* indices, const unsigned int indexCount, const BufferLayout& layout);
+	void DrawGui();
 	void SetMaterial(Material* material) { _material = material; }
 	const VertexArray* GetVertexArray() const { return _vao; }
 	Transform* GetTransform() { return &_transform; }

@@ -105,6 +105,11 @@ void Shader::UploadUniformInt(const std::string& name, int i) const
 	glUniform1i(GetUniformLocation(name), i);
 }
 
+void Shader::UploadUniformVec3(const std::string& name, const glm::vec3 vec)
+{
+	glUniform3f(GetUniformLocation(name), vec.x, vec.y, vec.z);
+}
+
 GLint Shader::GetUniformLocation(const std::string& name) const
 {
 	if (_uniformLocations.find(name) != _uniformLocations.end())

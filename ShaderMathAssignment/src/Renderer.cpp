@@ -34,7 +34,8 @@ void Renderer::Render(Material* material, const VertexArray* vao, const glm::mat
 	vao->Bind();
 	material->Bind();
 
-	material->GetShader()->UploadUniformMat4("u_Transform", _sceneData->viewProjection * transform);
+	material->GetShader()->UploadUniformMat4("u_ViewProjection", _sceneData->viewProjection);
+	material->GetShader()->UploadUniformMat4("u_World", transform);
 
 	glDrawElements(GL_TRIANGLES, vao->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 }

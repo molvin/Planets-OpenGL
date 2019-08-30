@@ -18,6 +18,8 @@ void Material::Bind()
 		_shader->UploadUniformFloat(name, value);
 	for (auto const&[name, value] : _vec2Uniforms)
 		_shader->UploadUniformVec2(name, value);
+	for (auto const&[name, value] : _vec3Uniforms)
+		_shader->UploadUniformVec3(name, value);
 	for (auto const&[name, value] : _mat4Uniforms)
 		_shader->UploadUniformMat4(name, value);
 	for (auto const&[name, value] : _intUniforms)
@@ -39,4 +41,9 @@ void Material::SetUniformMat4(const std::string& name, const glm::mat4& mat)
 void Material::SetUniformInt(const std::string& name, int i)
 {
 	_intUniforms[name] = i;
+}
+
+void Material::SetUniformVec3(const std::string& name, const glm::vec3& vec)
+{
+	_vec3Uniforms[name] = vec;
 }

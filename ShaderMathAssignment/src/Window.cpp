@@ -19,6 +19,8 @@ Window::Window(const unsigned width, const unsigned height, const char* title)
 	}
 
 	glfwMakeContextCurrent(_window);
+	_width = width;
+	_height = height;
 }
 
 Window::~Window()

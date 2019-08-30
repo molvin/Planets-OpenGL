@@ -8,11 +8,12 @@ layout(location = 2) in vec2 a_TexCoord;
 out vec3 f_Color;
 out vec2 f_TexCoord;
 
-uniform mat4 u_Transform;
+uniform mat4 u_World;
+uniform mat4 u_ViewProjection;
 
 void main()
 {
-	gl_Position = u_Transform * vec4(a_Position, 1.0f);
+	gl_Position = u_ViewProjection * u_World * vec4(a_Position, 1.0f);
 	f_Color = vec3(a_TexCoord, 0.0f);
 	f_TexCoord = a_TexCoord;
 }

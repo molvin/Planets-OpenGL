@@ -4,8 +4,9 @@
 #include "VertexBuffer.h"
 #include "VertexArray.h"
 #include <iterator>
-#include <map>
+#include "glm/glm.hpp"
 #include <unordered_map>
+
 
 Mesh::Mesh(const std::string& path)
 {
@@ -22,10 +23,8 @@ Mesh::Mesh(const std::string& path)
 
 	Init(&vertices[0].position.x, sizeof(float) * (3 + 2 + 3), vertices.size(), &indices[0], indices.size(), layout);
 }
-
 Mesh::Mesh(float* vertices, const unsigned vertexSize, const unsigned vertexCount, unsigned* indices, const unsigned indexCount, const BufferLayout& layout)
-{
-	
+{	
 	Init(vertices, vertexSize, vertexCount, indices, indexCount, layout);
 }
 
@@ -46,9 +45,15 @@ void Mesh::Init(float* vertices, const unsigned int vertexSize, const unsigned i
 	_vao->Unbind();
 }
 
+void Mesh::DrawGui()
+{
+
+
+}
+
 void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices)
 {
-	//TODO: support more obj files, only require position, not normal/uv
+	//TODO: support more obj files, only require position, not normal/uv, materials, start index
 	
 	std::ifstream file(path, std::ios::in);
 	std::string line;
@@ -96,7 +101,7 @@ void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::
 			int A, B, C; // uv index
 			int d, f, g; // normal index
 			const char* chh = line.c_str();
-			sscanf(chh, "f %i/%i/%i %i/%i/%i %i/%i/%i", &a, &A, &d, &b, &B, &f, &c, &C, &g);
+			int matches = sscanf(chh, "f %i/%i/%i %i/%i/%i %i/%i/%i", &a, &A, &d, &b, &B, &f, &c, &C, &g);
 			a--; b--; c--;
 			A--; B--; C--;
 			d--; f--; g--;
@@ -109,7 +114,7 @@ void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::
 	const int length = positionIndices.size();
 
 
-	std::unordered_map<std::string, int> vertexIndices;
+	std::unordered_map<unsigned int, int> vertexIndices;
 
 	for (int i = 0; i < length; i++)
 	{
@@ -120,9 +125,10 @@ void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::
 			tempNormals[normalIndices[i]]
 		};
 		vertices.push_back(vertex);
-		std::string key = vertex.ToString();	//Probably not the best way to hash a vertex
+		unsigned int key = positionIndices[i] * 1000000000 + uvIndices[i] * 1000000 + normalIndices[i];
 		if (vertexIndices.find(key) == vertexIndices.end())
 			vertexIndices[key] = i;
+
 
 		indices.push_back(vertexIndices[key]);
 	}
