@@ -1,6 +1,7 @@
 #pragma once
 #include "Shader.h"
 #include <queue>
+#include <variant>
 
 class Material
 {
@@ -9,19 +10,10 @@ public:
 	~Material();
 	void Bind();
 
-	void SetUniformFloat(const std::string& name, float value);
-	void SetUniformVec2(const std::string& name, const glm::vec2& vec);
-	void SetUniformMat4(const std::string& name, const glm::mat4& mat);
-	void SetUniformInt(const std::string& name, int i);
-	void SetUniformVec3(const std::string& name, const glm::vec3& vec);
+	void SetUniform(const std::string& name, const std::variant<float, int, glm::vec2, glm::vec3, glm::mat4>& value);
 	Shader* GetShader() const { return _shader; }
 private:
 	Shader* _shader;
-	std::map<std::string, float> _floatUniforms;
-	std::map<std::string, int> _intUniforms;
-	std::map<std::string, glm::vec2> _vec2Uniforms;
-	std::map<std::string, glm::vec3> _vec3Uniforms;
-	std::map<std::string, glm::mat4> _mat4Uniforms;
-	
+	std::map<std::string, std::variant<float, int, glm::vec2, glm::vec3, glm::mat4>> _uniforms;
 };
 

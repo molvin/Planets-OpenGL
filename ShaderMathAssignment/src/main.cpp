@@ -18,10 +18,10 @@
 #include "ImGUI/imgui_impl_glfw.h"
 #include "ImGUI/imgui_impl_opengl3.h"
 
-//TODO: Input system
 //TODO: folder structure and namespaces
 //TODO: ImGUI
 //TODO: Window resize event
+//TODO: Assimp
 int main()
 {
 	//Window
@@ -75,7 +75,7 @@ int main()
 	Mesh triMesh(triVertices, sizeof(float) * 8, 3, triIndices, 3, layout);
 	triMesh.GetTransform()->Position = glm::vec3(-3.0f, 0.0f, 0.0f);
 	//Suzanne
-	Mesh mesh("res/bunny.obj");
+	Mesh mesh("res/suzanne.obj");
 	//Shader
 	auto[cubeVertexSource, cubeFragmentSource] = Shader::ParseShaderFile("shaders/cube.shader");
 	Shader cubeShader(cubeVertexSource, cubeFragmentSource);
@@ -110,9 +110,9 @@ int main()
 	while (window.Open())
 	{
 		
-		triMaterial.SetUniformFloat("u_Time", glfwGetTime());
-		quadMaterial.SetUniformFloat("u_Time",glfwGetTime() * 3);
-		material3D.SetUniformVec3("u_LightDirection", glm::vec3(0.0f, -1.0f, 0.0f));
+		triMaterial.SetUniform("u_Time", (float)glfwGetTime());
+		quadMaterial.SetUniform("u_Time",(float)glfwGetTime() * 3);
+		material3D.SetUniform("u_LightDirection", glm::vec3(0.0f, -1.0f, 0.0f));
 
 		if (Input::GetMouseButton(GLFW_MOUSE_BUTTON_2))
 		{
