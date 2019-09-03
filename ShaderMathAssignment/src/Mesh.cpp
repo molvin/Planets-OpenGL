@@ -6,12 +6,22 @@
 #include <iterator>
 #include "glm/glm.hpp"
 #include <unordered_map>
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 
 
 Mesh::Mesh(const std::string& path)
 {
+	Assimp::Importer Importer;
+	const aiScene* pScene = Importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
+
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
+
+
+
+	return;
 
 	LoadObj(path, vertices, indices);
 
