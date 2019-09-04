@@ -9,22 +9,49 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include "ImGUI/imgui.h"
 
 
 Mesh::Mesh(const std::string& path)
 {
+	//TODO: more assimp stuff, materials, animation, etc.
+	
 	Assimp::Importer Importer;
 	const aiScene* pScene = Importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
 
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 
+	aiMesh* mesh = pScene->mMeshes[0];
 
+	//Read vertices
+	for(unsigned int i = 0; i < mesh->mNumVertices; i++)
+	{
+		Vertex vertex;
+		aiVector3t<float> pos = mesh->mVertices[i];
+		vertex.position = glm::vec3(pos.x, pos.y, pos.z);
 
-	return;
+		aiVector3t<float> uv = mesh->mTextureCoords[0][i];
+		vertex.uv = glm::vec2(uv.x, uv.y);
 
-	LoadObj(path, vertices, indices);
+		aiVector3t<float> normal = mesh->mNormals[i];
+		vertex.normal = glm::vec3(normal.x, normal.y, normal.z);
 
+		vertices.push_back(vertex);
+	}
+	//Indices
+	for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+	{
+		aiFace face = mesh->mFaces[i];
+		for (unsigned int j = 0; j < face.mNumIndices; j++)
+		{
+			indices.push_back(face.mIndices[j]);
+		}
+	}
+
+	//vertices.clear();
+	//LoadObj(path, vertices, indices);
+	//printf("V: %d\n", vertices.size());
 	//TODO: should be set by the obj loader
 	BufferLayout layout;
 	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), 0);
@@ -55,10 +82,16 @@ void Mesh::Init(float* vertices, const unsigned int vertexSize, const unsigned i
 	_vao->Unbind();
 }
 
-void Mesh::DrawGui()
+void Mesh::DrawGui(const std::string& name)
 {
-
-
+	ImGui::Begin(name.c_str());
+	ImGui::Text("Transform");              
+	ImGui::InputFloat3("Position", &GetTransform()->Position[0]);
+	//glm::vec3 euler = glm::eulerAngles(GetTransform()->Rotation) * 180.0f / 3.1415f;
+	ImGui::SliderFloat3("Rotation", &_euler[0], -180.0f, 180.0f);
+	GetTransform()->Rotation = glm::quat(_euler * 3.1415f / 180.0f);
+	ImGui::InputFloat3("Scale", &GetTransform()->Scale[0]);
+	ImGui::End();
 }
 
 void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices)

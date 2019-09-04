@@ -17,11 +17,8 @@
 #include "ImGUI/imgui.h"
 #include "ImGUI/imgui_impl_glfw.h"
 #include "ImGUI/imgui_impl_opengl3.h"
-#include "assimp/Importer.hpp"
 
 //TODO: folder structure and namespaces
-//TODO: ImGUI
-//TODO: Window resize event
 //TODO: Assimp
 int main()
 {
@@ -43,17 +40,17 @@ int main()
 
 	//Buffer layout
 	BufferLayout layout;
-	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 3 + 2), 0);
-	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 3 + 2),sizeof(float) * 3);
-	layout.AddLayoutElement(2, GL_FLOAT, false, sizeof(float) * (3 + 3 + 2), sizeof(float) * (3 + 3));
+	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), 0);
+	layout.AddLayoutElement(2, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * 3);
+	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * (3 + 2));
 	//Shapes
 	//Quad
 	float quadVertices[] =
 	{
-		-0.5f, -0.5f, 0.0f,    1.0f, 0.0f, 0.0f,    0.0f, 0.0f,
-		0.5f, -0.5f,  0.0f,  0.0f, 1.0f, 0.0f,    1.0f, 0.0f,
-		0.5f, 0.5f,  0.0f,      0.0f, 0.0f, 1.0f,    1.0f, 1.0f,
-		-0.5f, 0.5f,  0.0f,  0.0f, 0.0f, 1.0f,    0.0f, 1.0f,
+		-0.5f, -0.5f,  0.0f,    0.0f, 0.0f,		0.0f, 0.0f, 1.0f,
+		 0.5f, -0.5f,  0.0f,	1.0f, 0.0f,		0.0f, 0.0f, 1.0f,
+		 0.5f,  0.5f,  0.0f,    1.0f, 1.0f,		0.0f, 0.0f, 1.0f,
+		-0.5f,  0.5f,  0.0f,    0.0f, 1.0f,		0.0f, 0.0f, 1.0f,
 	};
 	unsigned int quadIndices[] =
 	{
@@ -65,9 +62,9 @@ int main()
 	//Tri
 	float triVertices[] =
 	{
-		-0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f,    0.0f, 0.0f,
-		0.0f, 0.5f, 0.0f,        0.0f, 0.0f, 1.0f,    0.5f, 1.0f,
-		0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,    1.0f, 0.0f
+		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f,		0.0f, 0.0f, 1.0f,
+		0.0f, 0.5f, 0.0f,     0.5f, 1.0f,		0.0f, 0.0f, 1.0f,
+		0.5f, -0.5f, 0.0f,    1.0f, 0.0f,		0.0f, 0.0f, 1.0f,
 	};
 	unsigned int triIndices[] =
 	{
@@ -76,26 +73,37 @@ int main()
 	Mesh triMesh(triVertices, sizeof(float) * 8, 3, triIndices, 3, layout);
 	triMesh.GetTransform()->Position = glm::vec3(-3.0f, 0.0f, 0.0f);
 	//Suzanne
-	Mesh mesh("res/suzanne.obj");
+	Mesh mesh("res/TRex.fbx");
+	Mesh suzanne("res/suzanne.obj");
+	suzanne.GetTransform()->Position = glm::vec3(0.0f, 0.0f, 5.0f);
 	//Shader
 	auto[cubeVertexSource, cubeFragmentSource] = Shader::ParseShaderFile("shaders/cube.shader");
-	Shader cubeShader(cubeVertexSource, cubeFragmentSource);
-	auto[vertexSource, fragmentSource] = Shader::ParseShaderFile("shaders/Basic.shader");
-	Shader shader(vertexSource, fragmentSource);
-	shader.Bind();	
+	Shader shader3D(cubeVertexSource, cubeFragmentSource);
+	//auto[vertexSource, fragmentSource] = Shader::ParseShaderFile("shaders/Basic.shader");
+	//Shader shader2D(vertexSource, fragmentSource);
+	auto[toonVertSource, toonFragSource] = Shader::ParseShaderFile("shaders/toon.shader");
+	Shader toonShader(toonVertSource, toonFragSource);
+	//Materials
+	//Material triMaterial(&shader2D);
+	//Material quadMaterial(&shader2D);
+	Material material3D(&shader3D);
+	Material toonMaterial(&toonShader);
 	//Textures
+
 	Texture texture_0("res/uv_test.jpg");
 	Texture texture_1("res/img_cheryl.jpg");
-	texture_0.Bind(0);
-	texture_1.Bind(1);
-	shader.UploadUniformInt("u_Sampler1", 1);
+	texture_0.Bind(1);
+	texture_1.Bind(2);
+	material3D.SetUniform("u_Sampler0",1);
+	material3D.SetUniform("u_Sampler1", 2);
+	Texture toonTexture("res/toon.png");
+	toonTexture.Bind(3);
+	toonMaterial.SetUniform("u_Sampler", 3);
+
+	
 	//Matrices
 	const float ratio = window.GetAspectRatio();
 	glm::mat4 projection = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
-	//Materials
-	Material triMaterial(&shader);
-	Material quadMaterial(&shader);
-	Material material3D(&cubeShader);
 	//Main loop
 	Renderer::Init();
 	//Camera
@@ -107,14 +115,21 @@ int main()
 	const float cameraRotationSpeed = 125.0f;
 	const float cameraSpeed = 5.0f;
 
-	glm::vec3 euler = glm::vec3(0.0f);
+	glm::vec3 lightDir = glm::vec3(0.0f, -1.0f, 0.0f);
+	glm::vec3 toonColor = glm::vec3(0.0f, 1.0f, 0.0f);
+	float specularIntensity = 0.4f;
 	while (window.Open())
 	{
+		if(window.SizeChanged())
+		{
+			printf("Window size changed\n");
+			projection = glm::perspective(glm::radians(60.0f), window.GetAspectRatio(), 0.1f, 1000.0f);
+		}
 		
-		triMaterial.SetUniform("u_Time", (float)glfwGetTime());
-		quadMaterial.SetUniform("u_Time",(float)glfwGetTime() * 3);
-		material3D.SetUniform("u_LightDirection", glm::vec3(0.0f, -1.0f, 0.0f));
-
+		//triMaterial.SetUniform("u_Time", (float)glfwGetTime());
+		//quadMaterial.SetUniform("u_Time",(float)glfwGetTime() * 3);
+		material3D.SetUniform("u_EyePosition", camera.Position);
+		
 		if (Input::GetMouseButton(GLFW_MOUSE_BUTTON_2))
 		{
 			glm::vec2 mouseDir = Input::GetMouseDirection() * cameraRotationSpeed * deltaTime;
@@ -128,28 +143,38 @@ int main()
 		camera.Position += -camera.GetRight() * horizontal * cameraSpeed * deltaTime;
 		camera.Position += glm::vec3(0.0f, 1.0f, 0.0f) * height * cameraSpeed * deltaTime;
 				
+
+
+
 		Renderer::Begin(projection * camera.GetViewMatrix());
-	
-		Renderer::Render(&triMaterial, triMesh.GetVertexArray(), triMesh.GetTransform()->GetMatrix());
-		Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());	
-		Renderer::Render(&quadMaterial, quadMesh.GetVertexArray(), quadMesh.GetTransform()->GetMatrix());
+		Renderer::Render(&material3D, triMesh.GetVertexArray(), triMesh.GetTransform()->GetMatrix());
+		Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
+		Renderer::Render(&material3D, quadMesh.GetVertexArray(), quadMesh.GetTransform()->GetMatrix());
+		Renderer::Render(&toonMaterial, suzanne.GetVertexArray(), mesh.GetTransform()->GetMatrix() * suzanne.GetTransform()->GetMatrix());
+
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+		mesh.DrawGui("Mesh");
+		suzanne.DrawGui("Suzanne");
+		quadMesh.DrawGui("Quad");
+		triMesh.DrawGui("Tri");
 
-		ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-		ImGui::InputFloat3("Suzanne Position", &mesh.GetTransform()->Position[0]);
-		ImGui::SliderFloat3("Suzanne Rotation", &euler[0], 0.0f, 360.0f);
-		mesh.GetTransform()->Rotation = glm::quat(euler * 3.1415f / 180.0f);
-		ImGui::InputFloat3("Suzanne Scale", &mesh.GetTransform()->Scale[0]);
-
+		ImGui::Begin("Light Direction");
+		ImGui::SliderFloat3("Direction", &lightDir[0], -1.0f, 1.0f);
+		ImGui::InputFloat("Specular Intensity", &specularIntensity);
+		ImGui::ColorPicker3("Toon Color", &toonColor[0]);
+		lightDir = normalize(lightDir);
+		material3D.SetUniform("u_LightDirection", lightDir);
+		toonMaterial.SetUniform("u_LightDirection", lightDir);
+		toonMaterial.SetUniform("u_Color", toonColor);
+		material3D.SetUniform("u_SpecularIntensity", specularIntensity);
 		ImGui::End();
 
 		ImGui::Render();
-
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		
 		glfwSwapBuffers(window.GetWindow());
 		glfwPollEvents();
 

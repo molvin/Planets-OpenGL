@@ -3,6 +3,8 @@
 #include <queue>
 #include <variant>
 
+//TODO: add textures and bind them to their appropriate slots when binding material
+
 class Material
 {
 public:
