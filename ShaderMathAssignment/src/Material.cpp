@@ -1,5 +1,5 @@
 #include "Material.h"
-
+#include "Texture.h"
 
 
 Material::Material(Shader* shader)
@@ -10,7 +10,7 @@ Material::~Material()
 {
 }
 
-void Material::Bind()
+void Material::Bind() const
 {
 	_shader->Bind();
 	for(auto const&[name, data] : _uniforms)
@@ -26,6 +26,13 @@ void Material::Bind()
 		else if (auto value = std::get_if<glm::mat4>(&data))
 			_shader->UploadUniformMat4(name, *value);
 	}
+	for (auto const &texture : _textures)
+		texture->Bind();
+}
+
+void Material::AddTexture(const Texture* texture)
+{
+	_textures.push_back(texture);
 }
 void Material::SetUniform(const std::string& name, const std::variant<float, int, glm::vec2, glm::vec3, glm::mat4>& value)
 {

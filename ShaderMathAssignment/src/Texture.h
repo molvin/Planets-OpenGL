@@ -5,11 +5,13 @@
 class Texture
 {
 public:
-	Texture(const std::string& path);
+	Texture(const std::string& path, const unsigned int slot);
 	~Texture();
-	void Bind(unsigned int slot = 0);
+	void Bind() const;
 private:
+	void SwizzleRows(unsigned char* data);
 	GLuint _textureId;
+	unsigned int _slot;
 	int _width, _height, _channels;
 };
 

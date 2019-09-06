@@ -10,9 +10,9 @@ public:
 	~Window();
 	bool Open();
 	GLFWwindow* GetWindow() const { return _window; }
-	float GetAspectRatio() { return (float)_width / (float)_height; }
-	unsigned int GetWidth() { return _width; }
-	unsigned int GetHeight() { return _width; }
+	float GetAspectRatio() const { return (float)_width / _height; }
+	unsigned int GetWidth() const { return _width; }
+	unsigned int GetHeight() const { return _height; }
 	bool SizeChanged();
 private:
 	GLFWwindow* _window;

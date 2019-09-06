@@ -151,6 +151,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\ImGuiRenderer.cpp" />
+    <ClCompile Include="src\FrameBuffer.cpp" />
     <ClCompile Include="src\ImGUI\imgui.cpp" />
     <ClCompile Include="src\ImGUI\imgui_demo.cpp" />
     <ClCompile Include="src\ImGUI\imgui_draw.cpp" />
@@ -171,6 +173,8 @@
     <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ImGuiRenderer.h" />
+    <ClInclude Include="src\FrameBuffer.h" />
     <ClInclude Include="src\ImGUI\imconfig.h" />
     <ClInclude Include="src\ImGUI\imgui.h" />
     <ClInclude Include="src\ImGUI\imgui_impl_glfw.h" />

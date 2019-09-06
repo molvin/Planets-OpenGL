@@ -19,6 +19,8 @@
     <ClCompile Include="src\ImGUI\imgui_widgets.cpp" />
     <ClCompile Include="src\ImGUI\imgui_impl_glfw.cpp" />
     <ClCompile Include="src\ImGUI\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="src\FrameBuffer.cpp" />
+    <ClCompile Include="src\ImGuiRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Shader.h" />
@@ -40,5 +42,7 @@
     <ClInclude Include="src\ImGUI\imstb_truetype.h" />
     <ClInclude Include="src\ImGUI\imgui_impl_opengl3.h" />
     <ClInclude Include="src\ImGUI\imgui_impl_glfw.h" />
+    <ClInclude Include="src\FrameBuffer.h" />
+    <ClInclude Include="src\ImGuiRenderer.h" />
   </ItemGroup>
 </Project>
