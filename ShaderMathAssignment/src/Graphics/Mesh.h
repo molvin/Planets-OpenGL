@@ -1,13 +1,11 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <GL/glew.h>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include "VertexArray.h"
-#include <glm/mat4x2.hpp>
 #include "Material.h"
-#include "Transform.h"
+#include "../Transform.h"
 #include <sstream>
 
 class BufferLayout;

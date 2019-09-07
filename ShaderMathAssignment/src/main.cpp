@@ -1,33 +1,28 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "Shader.h"
-#include "Renderer.h"
+#include "Graphics/Shader.h"
+#include "Graphics/Renderer.h"
 #include "glm/glm.hpp"
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/ext/matrix_clip_space.hpp>
-#include "Texture.h"
-#include "Mesh.h"
-#include "Window.h"
-#include "Material.h"
+#include "Graphics/Texture.h"
+#include "Graphics/Mesh.h"
+#include "Application/Window.h"
+#include "Graphics/Material.h"
 #include "Transform.h"
 #include "Camera.h"
-#include "Input.h"
+#include "Application/Input.h"
 #include "ImGUI/imgui.h"
-#include "FrameBuffer.h"
-#include "ImGuiRenderer.h"
+#include "Graphics/FrameBuffer.h"
+#include "ImGUI/ImGuiRenderer.h"
+#include "Time.h"
 
-//TODO: folder structure and namespaces
-//TODO: Assimp
 int main()
 {
-	//Window
+	//Init
 	Window window(1280, 720, "GLFW window");
-
-	//Input
 	Input::Init(window.GetWindow());
 	glewInit();
-
 	ImGuiRenderer::Init(window.GetWindow());
+	Time::Init();
 
 	//Meshes
 	Mesh mesh("res/TRex.fbx");
@@ -55,58 +50,33 @@ int main()
 	material3D.AddTexture(&texture_1);
 	toonMaterial.AddTexture(&toonTexture);
 
-	//Matrices
-	const float ratio = window.GetAspectRatio();
-	glm::mat4 projection = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
-
 	//Camera
-	Camera camera;
-	camera.Position = glm::vec3(0.0f, 0.0f, -10.0f);
+	Camera camera(glm::vec3(0.0f, 0.0f, -10.0f));
 
 	//Misc
-	float time = glfwGetTime();
-	float deltaTime = 0.016f;
-	const float cameraRotationSpeed = 125.0f;
-	const float cameraSpeed = 5.0f;
 	glm::vec3 lightDir = glm::vec3(0.0f, -1.0f, 0.0f);
 	glm::vec3 toonColor = glm::vec3(0.0f, 1.0f, 0.0f);
 	float specularIntensity = 0.4f;
-
 	FrameBuffer frameBuffer(2000, 2000);
 
 	//Main loop
 	Renderer::Init();
 	while (window.Open())
 	{
-		if(window.SizeChanged())	//TODO: Figure out a better way to deal with this
-		{
-			projection = glm::perspective(glm::radians(60.0f), window.GetAspectRatio(), 0.1f, 1000.0f);
-		}
 
 		//Camera movement
-		if (Input::GetMouseButton(GLFW_MOUSE_BUTTON_2))
-		{
-			glm::vec2 mouseDir = Input::GetMouseDirection() * cameraRotationSpeed * deltaTime;
-			camera.Rotate(mouseDir.x, glm::vec3(0.0f, 1.0f, 0.0f));
-			camera.Rotate(mouseDir.y, camera.GetRight());
-		}
-		float horizontal = Input::GetKey(GLFW_KEY_D) ? -1 : Input::GetKey(GLFW_KEY_A) ? 1 : 0;
-		float vertical = Input::GetKey(GLFW_KEY_S) ? -1 : Input::GetKey(GLFW_KEY_W) ? 1 : 0;
-		float height = Input::GetKey(GLFW_KEY_Q) ? -1 : Input::GetKey(GLFW_KEY_E) ? 1 : 0;
-		camera.Position += camera.GetForward() * vertical * cameraSpeed * deltaTime;
-		camera.Position += -camera.GetRight() * horizontal * cameraSpeed * deltaTime;
-		camera.Position += glm::vec3(0.0f, 1.0f, 0.0f) * height * cameraSpeed * deltaTime;
-		
+		camera.Update();
+
 		material3D.SetUniform("u_EyePosition", camera.Position);
 		//Rendering
 		frameBuffer.Bind();
 		glViewport(0, 0, 2000, 2000);
-		Renderer::Begin(projection * camera.GetViewMatrix());
+		Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
 		Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
 		Renderer::Render(&toonMaterial, suzanne.GetVertexArray(), mesh.GetTransform()->GetMatrix() * suzanne.GetTransform()->GetMatrix());
 		frameBuffer.Unbind();
 		glViewport(0, 0, window.GetWidth(), window.GetHeight()); 
-		Renderer::Begin(projection * camera.GetViewMatrix());
+		Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
 		Renderer::Render(&suzanne);
 		Renderer::Render(&mesh);
 		
@@ -134,11 +104,8 @@ int main()
 		glfwSwapBuffers(window.GetWindow());
 		glfwPollEvents();
 
-		float currentTime = glfwGetTime();
-		deltaTime = currentTime - time;
-		time = currentTime;
-
 		Input::Update();
+		Time::Tick();
 	}
 	ImGuiRenderer::Terminate();
 	glfwTerminate();
