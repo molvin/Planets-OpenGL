@@ -10,9 +10,10 @@
 
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
-	//fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-	//	(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-	//	type, severity, message);
+	return;
+	fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+		(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+		type, severity, message);
 }
 
 Renderer::SceneData* Renderer::_sceneData = new SceneData;
@@ -46,4 +47,10 @@ void Renderer::Render(const Material* material, const VertexArray* vao, const gl
 	material->GetShader()->UploadUniformMat4("u_World", transform);
 
 	glDrawElements(GL_TRIANGLES, vao->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+}
+
+void Renderer::RenderFrameBuffer()
+{
+	glBindVertexArray(0);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }

@@ -8,6 +8,7 @@
 #include "../Transform.h"
 #include <sstream>
 
+struct MeshTemplate;
 class BufferLayout;
 class Shader;
 
@@ -16,38 +17,22 @@ struct Vertex
 	glm::vec3 position;
 	glm::vec2 uv;
 	glm::vec3 normal;
-
-	std::string ToString() const
-	{
-		std::stringstream ss;
-		ss << position.x;
-		ss << position.y;
-		ss << position.z;
-		ss << uv.x;
-		ss << uv.y;
-		ss << normal.x;
-		ss << normal.y;
-		ss << normal.z;
-		return ss.str();
-	}
 };
-
-
-
 class Mesh
 {
 public:
+	Mesh();
 	Mesh(const std::string& path);
 	Mesh(float* vertices, const unsigned int vertexSize, const unsigned int vertexCount, unsigned int* indices, const unsigned int indexCount, const BufferLayout& layout);
 	~Mesh();
-	void Init(float* vertices, const unsigned int vertexSize, const unsigned int vertexCount, unsigned int* indices, const unsigned int indexCount, const BufferLayout& layout);
+	void Init(const float* vertices, const unsigned int vertexSize, const unsigned int vertexCount, const unsigned int* indices, const unsigned int indexCount, const BufferLayout& layout);
 	void DrawGui(const std::string& name);
 	void SetMaterial(Material* material) { _material = material; }
 	const VertexArray* GetVertexArray() const { return _vao; }
 	Transform* GetTransform() { return &_transform; }
 	const Material* GetMaterial() const { return _material; }
 	static void LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices);
-private:
+protected:
 	VertexArray* _vao;
 	VertexBuffer* _vbo;
 	IndexBuffer* _ibo;

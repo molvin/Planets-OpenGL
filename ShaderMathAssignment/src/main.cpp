@@ -34,7 +34,8 @@ int main()
 	Shader shader3D(cubeVertexSource, cubeFragmentSource);
 	auto[toonVertSource, toonFragSource] = Shader::ParseShaderFile("shaders/toon.shader");
 	Shader toonShader(toonVertSource, toonFragSource);
-
+	auto[postProcessVertSource, postProcessFragSource] = Shader::ParseShaderFile("shaders/post_process.shader");
+	Shader postProcessShader(postProcessVertSource, postProcessFragSource);
 	//Materials
 	Material material3D(&shader3D);
 	Material toonMaterial(&toonShader);
@@ -62,8 +63,7 @@ int main()
 	//Main loop
 	Renderer::Init();
 	while (window.Open())
-	{
-
+	{	
 		//Camera movement
 		camera.Update();
 
@@ -73,12 +73,14 @@ int main()
 		glViewport(0, 0, 2000, 2000);
 		Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
 		Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
-		Renderer::Render(&toonMaterial, suzanne.GetVertexArray(), mesh.GetTransform()->GetMatrix() * suzanne.GetTransform()->GetMatrix());
+		Renderer::Render(&toonMaterial, suzanne.GetVertexArray(), suzanne.GetTransform()->GetMatrix());
 		frameBuffer.Unbind();
-		glViewport(0, 0, window.GetWidth(), window.GetHeight()); 
+		glViewport(0, 0, window.GetWidth(), window.GetHeight());
+
 		Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
-		Renderer::Render(&suzanne);
-		Renderer::Render(&mesh);
+		frameBuffer.BindTexture();
+		postProcessShader.Bind();
+		Renderer::RenderFrameBuffer();
 		
 		//ImGUI
 		ImGuiRenderer::Begin();
@@ -99,7 +101,7 @@ int main()
 		ImGui::End();
 
 		ImGuiRenderer::End();
-
+		
 		//End of loop
 		glfwSwapBuffers(window.GetWindow());
 		glfwPollEvents();

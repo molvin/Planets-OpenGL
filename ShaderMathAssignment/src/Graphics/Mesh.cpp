@@ -11,10 +11,9 @@
 #include <assimp/scene.h>
 #include "../ImGUI/imgui.h"
 
+Mesh::Mesh() { }
 Mesh::Mesh(const std::string& path)
-{
-	//TODO: more assimp stuff, materials, animation, etc.
-	
+{	
 	Assimp::Importer Importer;
 	const aiScene* pScene = Importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
 
@@ -47,6 +46,7 @@ Mesh::Mesh(const std::string& path)
 			indices.push_back(face.mIndices[j]);
 		}
 	}
+
 	//TODO: should be set by the obj loader
 	BufferLayout layout;
 	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), 0);
@@ -59,7 +59,6 @@ Mesh::Mesh(float* vertices, const unsigned vertexSize, const unsigned vertexCoun
 {	
 	Init(vertices, vertexSize, vertexCount, indices, indexCount, layout);
 }
-
 Mesh::~Mesh()
 {
 	delete(_vao);
@@ -67,7 +66,7 @@ Mesh::~Mesh()
 	delete(_ibo);
 }
 
-void Mesh::Init(float* vertices, const unsigned int vertexSize, const unsigned int vertexCount, unsigned int * indices, const unsigned int indexCount, const BufferLayout& layout)
+void Mesh::Init(const float* vertices, const unsigned int vertexSize, const unsigned int vertexCount, const unsigned int * indices, const unsigned int indexCount, const BufferLayout& layout)
 {
 	_vao = new VertexArray();
 	_vbo = new VertexBuffer(&vertices[0], vertexSize * vertexCount, layout);

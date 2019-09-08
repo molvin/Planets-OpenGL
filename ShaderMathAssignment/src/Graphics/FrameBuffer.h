@@ -11,6 +11,7 @@ public:
 	void BindTexture();
 private:
 	GLuint _handle;
-	GLuint _textureHandle;
+	GLuint _colorTextureHandle;
+	GLuint _depthTextureHandle;
 };
 
