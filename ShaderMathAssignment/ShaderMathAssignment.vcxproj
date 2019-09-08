@@ -152,6 +152,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Game\PlanetSettings.cpp" />
+    <ClCompile Include="src\Game\Planet.cpp" />
     <ClCompile Include="src\ImGUI\ImGuiRenderer.cpp" />
     <ClCompile Include="src\Graphics\FrameBuffer.cpp" />
     <ClCompile Include="src\ImGUI\imgui.cpp" />
@@ -171,10 +173,13 @@
     <ClCompile Include="src\Graphics\VertexArray.cpp" />
     <ClCompile Include="src\Graphics\Texture.cpp" />
     <ClCompile Include="src\Application\Window.cpp" />
+    <ClCompile Include="src\Noise\FastNoise.cpp" />
     <ClCompile Include="src\Transform.cpp" />
     <ClCompile Include="src\Time.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Game\PlanetSettings.h" />
+    <ClInclude Include="src\Game\Planet.h" />
     <ClInclude Include="src\ImGUI\ImGuiRenderer.h" />
     <ClInclude Include="src\Graphics\FrameBuffer.h" />
     <ClInclude Include="src\ImGUI\imconfig.h" />
@@ -195,6 +200,7 @@
     <ClInclude Include="src\Graphics\VertexArray.h" />
     <ClInclude Include="src\Graphics\Texture.h" />
     <ClInclude Include="src\Application\Window.h" />
+    <ClInclude Include="src\Noise\FastNoise.h" />
     <ClInclude Include="src\Transform.h" />
     <ClInclude Include="src\Time.h" />
   </ItemGroup>

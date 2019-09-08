@@ -14,6 +14,8 @@
 #include "Graphics/FrameBuffer.h"
 #include "ImGUI/ImGuiRenderer.h"
 #include "Time.h"
+#include "Game/Planet.h"
+#include "Game/PlanetSettings.h"
 
 int main()
 {
@@ -36,9 +38,12 @@ int main()
 	Shader toonShader(toonVertSource, toonFragSource);
 	auto[postProcessVertSource, postProcessFragSource] = Shader::ParseShaderFile("shaders/post_process.shader");
 	Shader postProcessShader(postProcessVertSource, postProcessFragSource);
+	auto[planetVertSource, planetFragSource] = Shader::ParseShaderFile("shaders/planet.shader");
+	Shader planetShader(planetVertSource, planetFragSource);
 	//Materials
 	Material material3D(&shader3D);
 	Material toonMaterial(&toonShader);
+	Material planetMaterial(&planetShader);
 	suzanne.SetMaterial(&toonMaterial);
 	mesh.SetMaterial(&material3D);
 	
@@ -60,6 +65,10 @@ int main()
 	float specularIntensity = 0.4f;
 	FrameBuffer frameBuffer(2000, 2000);
 
+	PlanetSettings settings;
+	settings.Noise.push_back(NoiseSettings());
+	Planet planet(settings);
+
 	//Main loop
 	Renderer::Init();
 	while (window.Open())
@@ -69,23 +78,28 @@ int main()
 
 		material3D.SetUniform("u_EyePosition", camera.Position);
 		//Rendering
-		frameBuffer.Bind();
-		glViewport(0, 0, 2000, 2000);
+		//frameBuffer.Bind();
+		//glViewport(0, 0, 2000, 2000);
 		Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
-		Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
-		Renderer::Render(&toonMaterial, suzanne.GetVertexArray(), suzanne.GetTransform()->GetMatrix());
-		frameBuffer.Unbind();
-		glViewport(0, 0, window.GetWidth(), window.GetHeight());
+		//Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
+		//Renderer::Render(&toonMaterial, suzanne.GetVertexArray(), suzanne.GetTransform()->GetMatrix());
+		planet.Render(planetMaterial);
 
-		Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
-		frameBuffer.BindTexture();
-		postProcessShader.Bind();
-		Renderer::RenderFrameBuffer();
+		//frameBuffer.Unbind();
+		//glViewport(0, 0, window.GetWidth(), window.GetHeight());
+
+		//Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
+		//frameBuffer.BindTexture();
+		//postProcessShader.Bind();
+		//Renderer::RenderFrameBuffer();
 		
 		//ImGUI
+		
 		ImGuiRenderer::Begin();
 
-		mesh.DrawGui("Mesh");
+		planet.RenderGui();
+		/*
+		//mesh.DrawGui("Mesh");
 		suzanne.DrawGui("Suzanne");
 
 		//Extra settings
@@ -99,7 +113,7 @@ int main()
 		toonMaterial.SetUniform("u_Color", toonColor);
 		material3D.SetUniform("u_SpecularIntensity", specularIntensity);
 		ImGui::End();
-
+		*/
 		ImGuiRenderer::End();
 		
 		//End of loop
