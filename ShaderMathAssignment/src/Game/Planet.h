@@ -4,6 +4,8 @@
 
 class PlanetSettings;
 
+//TODO: handle memory leaks, smart pointers
+
 class PlanetFace
 {
 public:

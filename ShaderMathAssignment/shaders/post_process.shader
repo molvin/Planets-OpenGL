@@ -40,6 +40,6 @@ void main()
 	float depth = texture(u_FrameDepth, f_TexCoord).x;
 	depth = pow(depth, u_FogPower);
 
-	color.xyz = mix(color.xyz, u_FogColor, depth);
+	//color.xyz = mix(color.xyz, u_FogColor, depth);
 	o_Color = color;
 }

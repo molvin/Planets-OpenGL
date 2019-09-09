@@ -83,6 +83,10 @@ const std::string skyBoxImages[] =
 };
 
 //TODO: texture slots should be managed by materials not textures
+//TODO: Set light color (ambient, diffuse, specular), make directional light class
+//TODO: Cleanup
+//TODO: better planet generation, multiple noise filters
+//TODO: planet save settings
 
 int main()
 {
@@ -100,18 +104,14 @@ int main()
 	
 	//Meshes
 	Mesh mesh("res/TRex.fbx");
-	Mesh suzanne("res/suzanne.obj");
 	Mesh cube(cubeVertexData, sizeof(float) * 8, 24, cubeIndexData, 36, layout);
 	mesh.GetTransform()->Position = glm::vec3(-5.0f, -5.0f, 0.0f);
-	suzanne.GetTransform()->Position = glm::vec3(0.0f, 0.0f, 5.0f);
 	cube.GetTransform()->Scale = glm::vec3(10);
 	cube.GetTransform()->Position = glm::vec3(0.0f, -15, 0.0f);
 
 	//Shaders
 	auto[cubeVertexSource, cubeFragmentSource] = Shader::ParseShaderFile("shaders/cube.shader");
 	Shader shader3D(cubeVertexSource, cubeFragmentSource);
-	auto[toonVertSource, toonFragSource] = Shader::ParseShaderFile("shaders/toon.shader");
-	Shader toonShader(toonVertSource, toonFragSource);
 	auto[postProcessVertSource, postProcessFragSource] = Shader::ParseShaderFile("shaders/post_process.shader");
 	Shader postProcessShader(postProcessVertSource, postProcessFragSource);
 	auto[planetVertSource, planetFragSource] = Shader::ParseShaderFile("shaders/planet.shader");
@@ -121,11 +121,9 @@ int main()
 
 	//Materials
 	Material material3D(&shader3D);
-	Material toonMaterial(&toonShader);
 	Material planetMaterial(&planetShader);
 	Material postProcessMaterial(&postProcessShader);
 	Material skyboxMaterial(&skyboxShader);
-	suzanne.SetMaterial(&toonMaterial);
 	mesh.SetMaterial(&material3D);
 	postProcessMaterial.SetUniform("u_FrameDepth", 1);
 
@@ -139,8 +137,6 @@ int main()
 	CubeMap  skybox(skyBoxImages);
 	material3D.SetUniform("u_LightBuffer", 1);
 	planetMaterial.SetUniform("u_Sampler", 0);
-	//material3D.AddTexture(&texture_1);
-	toonMaterial.AddTexture(&toonTexture);
 	postProcessMaterial.AddTexture(frameBuffer.GetColorTexture());
 	postProcessMaterial.AddTexture(frameBuffer.GetDepthTexture());
 	material3D.AddTexture(&uvTestTexure);
@@ -151,100 +147,84 @@ int main()
 	Camera camera(glm::vec3(19.0f, 9.4f, -9.74f));
 	camera.Direction = glm::vec3(-0.859f, -0.329f, 0.392f);
 
-	//Misc
+	//Light
 	glm::vec3 lightDir = glm::vec3(-1.0f, -1.0f, -1.0f);
-	glm::vec3 toonColor = glm::vec3(0.0f, 1.0f, 0.0f);
 	float specularIntensity = 0.4f;
-
-	float fogPower = 500.f;
-	glm::vec3 fogColor = glm::vec3(0.1f, 0.1f, 0.1f);
-
-	PlanetSettings settings;
-	settings.Noise.push_back(NoiseSettings());
-	Planet planet(settings);
-
 	glm::mat4 lightProjection = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -30.f, 30.0f);
 	glm::mat4 lightView = glm::lookAt(glm::vec3(0.0f), lightDir, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	//Planet
+	PlanetSettings settings;
+	settings.Noise.push_back(NoiseSettings());
+	settings.Resolution = 3;
+	Planet planet(settings);
 
 	//Main loop
 	Renderer::Init();
 	while (window.Open())
 	{
-
 		skyboxMaterial.SetUniform("u_Projection", window.GetProjectionMatrix());
 		skyboxMaterial.SetUniform("u_View", camera.GetViewMatrix());
-
 		
-		lightView = glm::lookAt(glm::vec3(0.0f), lightDir, glm::vec3(0.0f, 1.0f, 0.0f));
 		material3D.SetUniform("u_EyePosition", camera.Position);
+		planetMaterial.SetUniform("u_EyePosition", camera.Position);
+
+		lightView = glm::lookAt(glm::vec3(0.0f), lightDir, glm::vec3(0.0f, 1.0f, 0.0f));
 		material3D.SetUniform("u_LightViewProjection", lightProjection * lightView);
+
+		//TODO: this could be done better
+		material3D.SetUniform("u_LightDirection", lightDir);
+		planetMaterial.SetUniform("u_LightDirection", lightDir);
+		material3D.SetUniform("u_SpecularIntensity", specularIntensity);
+		planetMaterial.SetUniform("u_SpecularIntensity", specularIntensity);
 
 		//Rendering
 		lightBuffer.Bind();
 
+		//Light render
 		glViewport(0, 0, 4096, 4096);
 		Renderer::Begin(lightProjection * lightView);
-		
 		Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
-		//Renderer::Render(&toonMaterial, suzanne.GetVertexArray(), suzanne.GetTransform()->GetMatrix());
 		Renderer::Render(&material3D, cube.GetVertexArray(), cube.GetTransform()->GetMatrix());
 		lightBuffer.Unbind();
 
-
+		//Render to frame buffer
 		frameBuffer.Bind();
 		glViewport(0, 0, 2000, 2000);
-
-
 		Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());		
-
-
-
 		Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
-		//Renderer::Render(&toonMaterial, suzanne.GetVertexArray(), suzanne.GetTransform()->GetMatrix());
 		Renderer::Render(&material3D, cube.GetVertexArray(), cube.GetTransform()->GetMatrix());
 		planet.Render(planetMaterial);
-
 		skybox.Bind(0);
 		Transform transform;
 		Renderer::Render(&skyboxMaterial, cube.GetVertexArray(), transform.GetMatrix());
-
 		frameBuffer.Unbind();
-
+		
+		//Render from frame buffer
 		glViewport(0, 0, window.GetWidth(), window.GetHeight());
 		Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
-
-		postProcessMaterial.SetUniform("u_FogPower", fogPower);
-		postProcessMaterial.SetUniform("u_FogColor", fogColor);
 		Renderer::RenderFrameBuffer(postProcessMaterial);
 
 		//ImGUI
-
 		ImGuiRenderer::Begin();
 
 		planet.RenderGui();	
 		mesh.DrawGui("Mesh");
 		cube.DrawGui("Cube");
 
-		//Extra settings
+		//Light settings
 		ImGui::Begin("Light Direction");
 		ImGui::SliderFloat3("Direction", &lightDir[0], -1.0f, 1.0f);
 		ImGui::InputFloat("Specular Intensity", &specularIntensity);
-		ImGui::ColorPicker3("Toon Color", &toonColor[0]);
-		ImGui::InputFloat("Fog Power", &fogPower);
-		ImGui::ColorPicker3("Fog Color", &fogColor[0]);
 		lightDir = normalize(lightDir);
-		material3D.SetUniform("u_LightDirection", lightDir);
-		toonMaterial.SetUniform("u_LightDirection", lightDir);
-		toonMaterial.SetUniform("u_Color", toonColor);
-		material3D.SetUniform("u_SpecularIntensity", specularIntensity);
 		ImGui::End();
 
+		//Camera settings //TODO: add fov, clip planes
 		ImGui::Begin("Camera");
 		ImGui::InputFloat3("Position", &camera.Position[0]);
 		ImGui::SliderFloat3("Direction", &camera.Direction[0], -1.0f, 1.0f);
 		camera.Direction = glm::normalize(camera.Direction);
 		ImGui::End();
-
 
 		ImGuiRenderer::End();
 
@@ -254,7 +234,6 @@ int main()
 		//End of loop
 		glfwSwapBuffers(window.GetWindow());
 		glfwPollEvents();
-
 		Input::Update();
 		Time::Tick();
 	}

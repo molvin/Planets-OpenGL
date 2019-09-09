@@ -11,6 +11,7 @@ Planet::Planet(PlanetSettings& settings)
 	_settings = &settings;
 	GeneratePlanet();
 }
+
 Planet::~Planet()
 {
 	//delete[] _faces;
@@ -44,19 +45,21 @@ void Planet::RenderGui()
 	ImGui::End();
 
 	if (regenerate)
+	{
 		GeneratePlanet();
+	}
 }
 
 void Planet::GeneratePlanet()
 {
 	glm::vec3 directions[] =
 	{
-		glm::vec3(0.0f,  1.0f,  0.0f),	 //up
-		glm::vec3(0.0f, -1.0f,  0.0f), //down
-		glm::vec3(1.0f,  0.0f,  0.0f), //right
-		glm::vec3(-1.0f,  0.0f,  0.0f),	 //left
-		glm::vec3(0.0f,  0.0f,  1.0f), //forward
-		glm::vec3(0.0f,  0.0f, -1.0f), //back
+		glm::vec3(0.0f, 1.0f, 0.0f), //up
+		glm::vec3(0.0f, -1.0f, 0.0f), //down
+		glm::vec3(1.0f, 0.0f, 0.0f), //right
+		glm::vec3(-1.0f, 0.0f, 0.0f), //left
+		glm::vec3(0.0f, 0.0f, 1.0f), //forward
+		glm::vec3(0.0f, 0.0f, -1.0f), //back
 	};
 
 	_elevation.Reset(1000000, -100000);
@@ -75,7 +78,7 @@ PlanetFace::PlanetFace(const int resolution, const glm::vec3& localUp, PlanetSet
 	struct Vertex
 	{
 		glm::vec3 position = glm::vec3(0.0f);
-		glm::vec3 normal = glm::vec3(0.0f);
+		glm::vec3 normal = glm::vec3(1.0f);
 	};
 
 	std::vector<Vertex> vertices;
@@ -88,19 +91,19 @@ PlanetFace::PlanetFace(const int resolution, const glm::vec3& localUp, PlanetSet
 	const glm::vec3 axisA = glm::vec3(localUp.y, localUp.z, localUp.x);
 	const glm::vec3 axisB = glm::cross(localUp, axisA);
 
-	for(int y = 0, vi = 0, ti = 0; y < resolution; y++)
+	for (int y = 0, vi = 0, ti = 0; y < resolution; y++)
 	{
-		for(int x = 0; x < resolution; x++, vi++)
+		for (int x = 0; x < resolution; x++, vi++)
 		{
 			const glm::vec2 factor = glm::vec2(x, y) / (float)(resolution - 1);
 			glm::vec3 pointOnCube = localUp + (factor.x - 0.5f) * 2.0f * axisA + (factor.y - 0.5f) * 2.0f * axisB;
 			glm::vec3 pointOnSphere = glm::normalize(pointOnCube);
 			glm::vec3 pointOnPlanet = settings.CalculatePointOnPlanet(pointOnSphere, elevation);
 
-			vertices[vi] = { pointOnPlanet };
+			vertices[vi] = {pointOnPlanet, glm::vec3(1.0f)};
 			if (x == resolution - 1 || y == resolution - 1) continue;
 
-			indices[ti    ] = vi;
+			indices[ti] = vi;
 			indices[ti + 1] = vi + resolution + 1;
 			indices[ti + 2] = vi + resolution;
 
@@ -110,22 +113,29 @@ PlanetFace::PlanetFace(const int resolution, const glm::vec3& localUp, PlanetSet
 			ti += 6;
 		}
 	}
-	for(int i = 0; i < indexCount; i+=3)
+	glm::vec3 colors[] = {
+		glm::vec3(1.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f)
+	};
+	for (int i = 0; i < indexCount; i += 3)
 	{
 		//Triangle
-		Vertex v1 = vertices[indices[i]];
-		Vertex v2 = vertices[indices[i + 1]];
-		Vertex v3 = vertices[indices[i + 2]];
+		Vertex* v1 = &vertices[indices[i]];
+		Vertex* v2 = &vertices[indices[i + 1]];
+		Vertex* v3 = &vertices[indices[i + 2]];
 
-		glm::vec3 normal = glm::normalize(glm::cross(v2.position - v1.position, v3.position - v1.position));
-		v1.normal = v2.normal = v3.normal = normal;
+		glm::vec3 normal = glm::normalize(glm::cross(v2->position - v1->position, v3->position - v1->position));
+		v1->normal = normal;
+		v2->normal = normal;
+		v3->normal = normal;
 	}
 
 	const int vertexSize = sizeof(float) * 6;
 	BufferLayout layout;
 	layout.AddLayoutElement(3, GL_FLOAT, false, vertexSize, 0);
-	layout.AddLayoutElement(3, GL_FLOAT, false, vertexSize, 3);
-	_mesh = new Mesh(&vertices[0].position.x, vertexSize, vertexCount, &indices[0], indexCount, layout);
+	layout.AddLayoutElement(3, GL_FLOAT, false, vertexSize, sizeof(float) * 3);
+	_mesh = new Mesh(&vertices[0].position[0], vertexSize, vertexCount, &indices[0], indexCount, layout);
 }
 
 PlanetFace::~PlanetFace()

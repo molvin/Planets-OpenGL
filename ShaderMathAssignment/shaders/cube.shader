@@ -52,7 +52,6 @@ void main()
 	float diffuse = max(-dot(u_LightDirection, f_Normal), 0.0);
 	//Specular
 	vec3 worldEye = normalize(u_EyePosition - f_World);
-	//vec3 reflectedLightDir = reflect(u_LightDirection, f_Normal);
 	vec3 halfWayVector = normalize(worldEye - u_LightDirection);
 	float specular = max(dot(halfWayVector, f_Normal), 0.0f);
 	specular = pow(specular, SpecExponent) * u_SpecularIntensity;
