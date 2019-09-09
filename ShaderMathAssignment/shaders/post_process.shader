@@ -27,11 +27,19 @@ void main()
 #version 330 core
 
 uniform sampler2D u_FrameColor;
+uniform sampler2D u_FrameDepth;
+uniform vec3 u_FogColor;
+uniform float u_FogPower;
 
 in vec2 f_TexCoord;
 out vec4 o_Color;
 
 void main()
 {
-	o_Color = texture(u_FrameColor, f_TexCoord);
+	vec4 color = texture(u_FrameColor, f_TexCoord);
+	float depth = texture(u_FrameDepth, f_TexCoord).x;
+	depth = pow(depth, u_FogPower);
+
+	color.xyz = mix(color.xyz, u_FogColor, depth);
+	o_Color = color;
 }

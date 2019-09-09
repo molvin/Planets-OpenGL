@@ -1,7 +1,8 @@
 #include "PlanetSettings.h"
 #include <algorithm>
+#include "../MinMaxFloat.h"
 
-glm::vec3 PlanetSettings::CalculatePointOnPlanet(const glm::vec3& point)
+glm::vec3 PlanetSettings::CalculatePointOnPlanet(const glm::vec3& point, MinMaxFloat& elevationMinMax)
 {
 
 	float elevation = 0.0f;
@@ -22,7 +23,7 @@ glm::vec3 PlanetSettings::CalculatePointOnPlanet(const glm::vec3& point)
 	}
 
 	elevation = Radius * (1 + elevation);
-	//ElevationMinMax.AddValue(elevation);
+	elevationMinMax.AddValue(elevation);
 	return point * elevation;
 }
 

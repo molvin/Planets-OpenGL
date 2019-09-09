@@ -16,8 +16,9 @@ Planet::~Planet()
 	//delete[] _faces;
 }
 
-void Planet::Render(const Material& material)
+void Planet::Render(Material& material)
 {
+	material.SetUniform("u_ElevationMinMax", glm::vec2(_elevation.Min, _elevation.Max));
 	for (auto& face : _faces)
 	{
 		Renderer::Render(&material, face->GetMesh().GetVertexArray(), _transform.GetMatrix());
@@ -28,6 +29,7 @@ void Planet::RenderGui()
 {
 	ImGui::Begin("Planet Settings");
 
+	ImGui::InputInt("Resolution", &_settings->Resolution);
 	ImGui::InputFloat("Radius", &_settings->Radius);
 	ImGui::InputFloat("Strength", &_settings->Noise[0].Strength);
 	ImGui::InputInt("Layer Count", &_settings->Noise[0].LayerCount);
@@ -57,20 +59,23 @@ void Planet::GeneratePlanet()
 		glm::vec3(0.0f,  0.0f, -1.0f), //back
 	};
 
-	
+	_elevation.Reset(1000000, -100000);
 	for (int i = 0; i < 6; i++)
 	{
 		delete _faces[i];
-		_faces[i] = new PlanetFace(10, directions[i], *_settings);
+		_faces[i] = new PlanetFace(_settings->Resolution, directions[i], *_settings, _elevation);
 	}
+
+	printf("Elevation: min: %f, max: %f \n", _elevation.Min, _elevation.Max);
 }
 
 //----- Planet Face -----
-PlanetFace::PlanetFace(const int resolution, const glm::vec3& localUp, PlanetSettings& settings)
+PlanetFace::PlanetFace(const int resolution, const glm::vec3& localUp, PlanetSettings& settings, MinMaxFloat& elevation)
 {
 	struct Vertex
 	{
 		glm::vec3 position = glm::vec3(0.0f);
+		glm::vec3 normal = glm::vec3(0.0f);
 	};
 
 	std::vector<Vertex> vertices;
@@ -90,7 +95,7 @@ PlanetFace::PlanetFace(const int resolution, const glm::vec3& localUp, PlanetSet
 			const glm::vec2 factor = glm::vec2(x, y) / (float)(resolution - 1);
 			glm::vec3 pointOnCube = localUp + (factor.x - 0.5f) * 2.0f * axisA + (factor.y - 0.5f) * 2.0f * axisB;
 			glm::vec3 pointOnSphere = glm::normalize(pointOnCube);
-			glm::vec3 pointOnPlanet = settings.CalculatePointOnPlanet(pointOnSphere);
+			glm::vec3 pointOnPlanet = settings.CalculatePointOnPlanet(pointOnSphere, elevation);
 
 			vertices[vi] = { pointOnPlanet };
 			if (x == resolution - 1 || y == resolution - 1) continue;
@@ -105,10 +110,21 @@ PlanetFace::PlanetFace(const int resolution, const glm::vec3& localUp, PlanetSet
 			ti += 6;
 		}
 	}
+	for(int i = 0; i < indexCount; i+=3)
+	{
+		//Triangle
+		Vertex v1 = vertices[indices[i]];
+		Vertex v2 = vertices[indices[i + 1]];
+		Vertex v3 = vertices[indices[i + 2]];
 
-	const int vertexSize = sizeof(float) * 3;
+		glm::vec3 normal = glm::normalize(glm::cross(v2.position - v1.position, v3.position - v1.position));
+		v1.normal = v2.normal = v3.normal = normal;
+	}
+
+	const int vertexSize = sizeof(float) * 6;
 	BufferLayout layout;
 	layout.AddLayoutElement(3, GL_FLOAT, false, vertexSize, 0);
+	layout.AddLayoutElement(3, GL_FLOAT, false, vertexSize, 3);
 	_mesh = new Mesh(&vertices[0].position.x, vertexSize, vertexCount, &indices[0], indexCount, layout);
 }
 

@@ -1,14 +1,13 @@
 #pragma once
 #include "../Graphics/Mesh.h"
-
+#include "../MinMaxFloat.h"
 
 class PlanetSettings;
-
 
 class PlanetFace
 {
 public:
-	PlanetFace(const int resolution, const glm::vec3 & localUp, PlanetSettings & settings);
+	PlanetFace(const int resolution, const glm::vec3 & localUp, PlanetSettings & settings, MinMaxFloat& elevation);
 	~PlanetFace();
 	const Mesh& GetMesh() const { return *_mesh; }
 private:
@@ -20,7 +19,7 @@ class Planet
 public:
 	Planet(PlanetSettings& settings);
 	~Planet();
-	void Render(const Material& material);
+	void Render(Material& material);
 	void RenderGui();
 	
 private:
@@ -28,6 +27,7 @@ private:
 
 	PlanetFace* _faces[6] = {nullptr};
 	Transform _transform;
+	MinMaxFloat _elevation = MinMaxFloat(1000000, -100000000);
 	PlanetSettings* _settings;
 };
 

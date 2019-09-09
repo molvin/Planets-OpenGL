@@ -49,8 +49,9 @@ void Renderer::Render(const Material* material, const VertexArray* vao, const gl
 	glDrawElements(GL_TRIANGLES, vao->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 }
 
-void Renderer::RenderFrameBuffer()
+void Renderer::RenderFrameBuffer(const Material& material)
 {
+	material.Bind();
 	glBindVertexArray(0);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }

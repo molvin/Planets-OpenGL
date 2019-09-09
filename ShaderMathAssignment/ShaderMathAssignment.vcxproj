@@ -152,6 +152,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Graphics\CubeMap.cpp" />
+    <ClCompile Include="src\MinMaxFloat.cpp" />
     <ClCompile Include="src\Game\PlanetSettings.cpp" />
     <ClCompile Include="src\Game\Planet.cpp" />
     <ClCompile Include="src\ImGUI\ImGuiRenderer.cpp" />
@@ -178,6 +180,8 @@
     <ClCompile Include="src\Time.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Graphics\CubeMap.h" />
+    <ClInclude Include="src\MinMaxFloat.h" />
     <ClInclude Include="src\Game\PlanetSettings.h" />
     <ClInclude Include="src\Game\Planet.h" />
     <ClInclude Include="src\ImGUI\ImGuiRenderer.h" />

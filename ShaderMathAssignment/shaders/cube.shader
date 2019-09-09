@@ -17,7 +17,7 @@ void main()
 {
 	gl_Position = u_ViewProjection * u_World * vec4(a_Position, 1.0f);
 	f_Color = a_normal;
-	f_Normal = (u_World * vec4(a_normal, 0.0f)).xyz;
+	f_Normal = normalize((u_World * vec4(a_normal, 0.0f))).xyz;
 	f_uv = a_uv;
 	f_World = (u_World * vec4(a_Position, 1.0f)).xyz;
 }
@@ -27,9 +27,11 @@ void main()
 #version 330 core
 
 uniform sampler2D u_Sampler0;
+uniform sampler2D u_LightBuffer;
 uniform vec3 u_LightDirection;
 uniform vec3 u_EyePosition;
 uniform float u_SpecularIntensity;
+uniform mat4 u_LightViewProjection;
 
 out vec4 o_Color;
 in vec3 f_Color;
@@ -42,6 +44,7 @@ const vec3 AmbientColor = vec3(1.0f, 0.8, 0.2);
 const vec3 SpecularColor = vec3(1.0f, 0.9, 0.7);
 const float SpecExponent = 30.0f;
 const float SpecIntensity = 0.4f;
+const float ShadowBias = 0.01;
 
 void main()
 {
@@ -55,10 +58,18 @@ void main()
 	specular = pow(specular, SpecExponent) * u_SpecularIntensity;
 	//Ambient
 	float ambient = 0.2f;
+	//Shadows
+	vec4 lightNDC = u_LightViewProjection * vec4(f_World, 1.0f);
+	lightNDC = lightNDC * 0.5f + 0.5f;
+	float lightDepth = texture(u_LightBuffer, lightNDC.xy).x;
+	float ourDepth = lightNDC.z;
+	float shadow = step(ourDepth, lightDepth + ShadowBias);
+	diffuse *= shadow;
 
 	o_Color = texture(u_Sampler0, f_uv);
 	o_Color.xyz *= (DiffuseColor * diffuse) + (AmbientColor * ambient);
 	o_Color.xyz += (SpecularColor * specular);
+	//o_Color.xyz = vec3(shadow);
 	//o_Color = vec4(f_Normal, 1.0f);
 	//o_Color = vec4(diffuse, diffuse, diffuse, 1.0f);
 	//o_Color = vec4(f_World, 1.0f);

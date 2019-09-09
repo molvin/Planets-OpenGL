@@ -16,6 +16,73 @@
 #include "Time.h"
 #include "Game/Planet.h"
 #include "Game/PlanetSettings.h"
+#include "Graphics/VertexBuffer.h"
+#include "Graphics/CubeMap.h"
+
+float cubeVertexData[] = {
+	//Front face
+	-1.f, -1.f, +1.f,	0.f, 0.f,		0.f, 0.f, 1.f,  // 0
+	+1.f, -1.f, +1.f,	1.f, 0.f,		0.f, 0.f, 1.f,  // 1
+	+1.f, +1.f, +1.f,	1.f, 1.f,		0.f, 0.f, 1.f,  // 2
+	-1.f, +1.f, +1.f,	0.f, 1.f,		0.f, 0.f, 1.f, // 3
+
+	//back face
+	-1.f, -1.f, -1.f,	0.f, 0.f,		0.f, 0.f, -1.f,  // 4
+	+1.f, -1.f, -1.f,	1.f, 0.f,		0.f, 0.f, -1.f,  // 5
+	+1.f, +1.f, -1.f,	1.f, 1.f,		0.f, 0.f, -1.f,  // 6
+	-1.f, +1.f, -1.f,	0.f, 1.f,		0.f, 0.f, -1.f,  // 7
+
+	// right face
+	+1.f, -1.f, +1.f,	0.f, 0.f,		1.f, 0.f, 0.f,  // 8
+	+1.f, -1.f, -1.f,	1.f, 0.f,		1.f, 0.f, 0.f,  // 9
+	+1.f, +1.f, -1.f,	1.f, 1.f,		1.f, 0.f, 0.f,  // 10
+	+1.f, +1.f, +1.f,	0.f, 1.f,		1.f, 0.f, 0.f,  // 11
+
+	// left face
+	-1.f, -1.f, +1.f,	0.f, 0.f,		-1.f, 0.f, 0.f,  // 12
+	-1.f, -1.f, -1.f,	1.f, 0.f,		-1.f, 0.f, 0.f,  // 13
+	-1.f, +1.f, -1.f,	1.f, 1.f,		-1.f, 0.f, 0.f,  // 14
+	-1.f, +1.f, +1.f,	 0.f, 1.f,		-1.f, 0.f, 0.f, // 15
+
+	// top face
+	-1.f, +1.f, +1.f,	0.f, 0.f,		0.f, 1.f, 0.f,  // 16
+	+1.f, +1.f, +1.f,	1.f, 0.f,		0.f, 1.f, 0.f,  // 17
+	+1.f, +1.f, -1.f,	1.f, 1.f,		0.f, 1.f, 0.f,  // 18
+	-1.f, +1.f, -1.f,	0.f, 1.f,		0.f, 1.f, 0.f, // 19
+
+	// bottom face
+	-1.f, -1.f, +1.f,	0.f, 0.f,		0.f, -1.f, 0.f,  // 20
+	+1.f, -1.f, +1.f,	1.f, 0.f,		0.f, -1.f, 0.f,  // 21
+	+1.f, -1.f, -1.f,	1.f, 1.f,		0.f, -1.f, 0.f,  // 22
+	-1.f, -1.f, -1.f,	0.f, 1.f,		0.f, -1.f, 0.f,  // 23
+
+};
+unsigned int cubeIndexData[] = {
+	// front
+	0, 1, 2,        0, 2, 3,
+	// back
+	4, 5, 6,        4, 6, 7,
+	// right
+	8, 9, 10,        8, 10, 11,
+	// left
+	12, 13, 14,        12, 14, 15,
+	// top
+	16, 17, 18,        16, 18, 19,
+	//bottom
+	20, 21, 22,        20, 22, 23,
+};
+
+const std::string skyBoxImages[] =
+{
+	"res/Skybox/purplenebula_rt.tga",
+	"res/Skybox/purplenebula_lf.tga",
+	"res/Skybox/purplenebula_up.tga",
+	"res/Skybox/purplenebula_dn.tga",
+	"res/Skybox/purplenebula_ft.tga",
+	"res/Skybox/purplenebula_bk.tga",
+};
+
+//TODO: texture slots should be managed by materials not textures
 
 int main()
 {
@@ -26,11 +93,20 @@ int main()
 	ImGuiRenderer::Init(window.GetWindow());
 	Time::Init();
 
+	BufferLayout layout;
+	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), 0);
+	layout.AddLayoutElement(2, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * (3));
+	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * (3 + 2));
+	
 	//Meshes
 	Mesh mesh("res/TRex.fbx");
 	Mesh suzanne("res/suzanne.obj");
+	Mesh cube(cubeVertexData, sizeof(float) * 8, 24, cubeIndexData, 36, layout);
+	mesh.GetTransform()->Position = glm::vec3(-5.0f, -5.0f, 0.0f);
 	suzanne.GetTransform()->Position = glm::vec3(0.0f, 0.0f, 5.0f);
-	
+	cube.GetTransform()->Scale = glm::vec3(10);
+	cube.GetTransform()->Position = glm::vec3(0.0f, -15, 0.0f);
+
 	//Shaders
 	auto[cubeVertexSource, cubeFragmentSource] = Shader::ParseShaderFile("shaders/cube.shader");
 	Shader shader3D(cubeVertexSource, cubeFragmentSource);
@@ -40,82 +116,141 @@ int main()
 	Shader postProcessShader(postProcessVertSource, postProcessFragSource);
 	auto[planetVertSource, planetFragSource] = Shader::ParseShaderFile("shaders/planet.shader");
 	Shader planetShader(planetVertSource, planetFragSource);
+	auto[skyboxVertSource, skyboxFragSource] = Shader::ParseShaderFile("shaders/skybox.shader");
+	Shader skyboxShader(skyboxVertSource, skyboxFragSource);
+
 	//Materials
 	Material material3D(&shader3D);
 	Material toonMaterial(&toonShader);
 	Material planetMaterial(&planetShader);
+	Material postProcessMaterial(&postProcessShader);
+	Material skyboxMaterial(&skyboxShader);
 	suzanne.SetMaterial(&toonMaterial);
 	mesh.SetMaterial(&material3D);
-	
-	//Textures
-	Texture texture_0("res/uv_test.jpg", 0);
-	Texture texture_1("res/img_cheryl.jpg", 1);
-	Texture toonTexture("res/toon.png", 0);
-	material3D.SetUniform("u_Sampler1", 1);
-	material3D.AddTexture(&texture_0);
-	material3D.AddTexture(&texture_1);
-	toonMaterial.AddTexture(&toonTexture);
+	postProcessMaterial.SetUniform("u_FrameDepth", 1);
 
+	FrameBuffer lightBuffer(4096, 4096);
+	FrameBuffer frameBuffer(2000, 2000);
+
+	//Textures
+	Texture uvTestTexure("res/uv_test.jpg", 0);
+	Texture toonTexture("res/toon.png", 0);
+	Texture planetTexture("res/gradient.png", 0);
+	CubeMap  skybox(skyBoxImages);
+	material3D.SetUniform("u_LightBuffer", 1);
+	planetMaterial.SetUniform("u_Sampler", 0);
+	//material3D.AddTexture(&texture_1);
+	toonMaterial.AddTexture(&toonTexture);
+	postProcessMaterial.AddTexture(frameBuffer.GetColorTexture());
+	postProcessMaterial.AddTexture(frameBuffer.GetDepthTexture());
+	material3D.AddTexture(&uvTestTexure);
+	material3D.AddTexture(lightBuffer.GetDepthTexture());
+	planetMaterial.AddTexture(&planetTexture);
+	
 	//Camera
-	Camera camera(glm::vec3(0.0f, 0.0f, -10.0f));
+	Camera camera(glm::vec3(19.0f, 9.4f, -9.74f));
+	camera.Direction = glm::vec3(-0.859f, -0.329f, 0.392f);
 
 	//Misc
-	glm::vec3 lightDir = glm::vec3(0.0f, -1.0f, 0.0f);
+	glm::vec3 lightDir = glm::vec3(-1.0f, -1.0f, -1.0f);
 	glm::vec3 toonColor = glm::vec3(0.0f, 1.0f, 0.0f);
 	float specularIntensity = 0.4f;
-	FrameBuffer frameBuffer(2000, 2000);
+
+	float fogPower = 500.f;
+	glm::vec3 fogColor = glm::vec3(0.1f, 0.1f, 0.1f);
 
 	PlanetSettings settings;
 	settings.Noise.push_back(NoiseSettings());
 	Planet planet(settings);
 
+	glm::mat4 lightProjection = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -30.f, 30.0f);
+	glm::mat4 lightView = glm::lookAt(glm::vec3(0.0f), lightDir, glm::vec3(0.0f, 1.0f, 0.0f));
+
 	//Main loop
 	Renderer::Init();
 	while (window.Open())
-	{	
-		//Camera movement
-		camera.Update();
+	{
 
+		skyboxMaterial.SetUniform("u_Projection", window.GetProjectionMatrix());
+		skyboxMaterial.SetUniform("u_View", camera.GetViewMatrix());
+
+		
+		lightView = glm::lookAt(glm::vec3(0.0f), lightDir, glm::vec3(0.0f, 1.0f, 0.0f));
 		material3D.SetUniform("u_EyePosition", camera.Position);
+		material3D.SetUniform("u_LightViewProjection", lightProjection * lightView);
+
 		//Rendering
-		//frameBuffer.Bind();
-		//glViewport(0, 0, 2000, 2000);
-		Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
-		//Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
+		lightBuffer.Bind();
+
+		glViewport(0, 0, 4096, 4096);
+		Renderer::Begin(lightProjection * lightView);
+		
+		Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
 		//Renderer::Render(&toonMaterial, suzanne.GetVertexArray(), suzanne.GetTransform()->GetMatrix());
+		Renderer::Render(&material3D, cube.GetVertexArray(), cube.GetTransform()->GetMatrix());
+		lightBuffer.Unbind();
+
+
+		frameBuffer.Bind();
+		glViewport(0, 0, 2000, 2000);
+
+
+		Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());		
+
+
+
+		Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
+		//Renderer::Render(&toonMaterial, suzanne.GetVertexArray(), suzanne.GetTransform()->GetMatrix());
+		Renderer::Render(&material3D, cube.GetVertexArray(), cube.GetTransform()->GetMatrix());
 		planet.Render(planetMaterial);
 
-		//frameBuffer.Unbind();
-		//glViewport(0, 0, window.GetWidth(), window.GetHeight());
+		skybox.Bind(0);
+		Transform transform;
+		Renderer::Render(&skyboxMaterial, cube.GetVertexArray(), transform.GetMatrix());
 
-		//Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
-		//frameBuffer.BindTexture();
-		//postProcessShader.Bind();
-		//Renderer::RenderFrameBuffer();
-		
+		frameBuffer.Unbind();
+
+		glViewport(0, 0, window.GetWidth(), window.GetHeight());
+		Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
+
+		postProcessMaterial.SetUniform("u_FogPower", fogPower);
+		postProcessMaterial.SetUniform("u_FogColor", fogColor);
+		Renderer::RenderFrameBuffer(postProcessMaterial);
+
 		//ImGUI
-		
+
 		ImGuiRenderer::Begin();
 
-		planet.RenderGui();
-		/*
-		//mesh.DrawGui("Mesh");
-		suzanne.DrawGui("Suzanne");
+		planet.RenderGui();	
+		mesh.DrawGui("Mesh");
+		cube.DrawGui("Cube");
 
 		//Extra settings
 		ImGui::Begin("Light Direction");
 		ImGui::SliderFloat3("Direction", &lightDir[0], -1.0f, 1.0f);
 		ImGui::InputFloat("Specular Intensity", &specularIntensity);
 		ImGui::ColorPicker3("Toon Color", &toonColor[0]);
+		ImGui::InputFloat("Fog Power", &fogPower);
+		ImGui::ColorPicker3("Fog Color", &fogColor[0]);
 		lightDir = normalize(lightDir);
 		material3D.SetUniform("u_LightDirection", lightDir);
 		toonMaterial.SetUniform("u_LightDirection", lightDir);
 		toonMaterial.SetUniform("u_Color", toonColor);
 		material3D.SetUniform("u_SpecularIntensity", specularIntensity);
 		ImGui::End();
-		*/
+
+		ImGui::Begin("Camera");
+		ImGui::InputFloat3("Position", &camera.Position[0]);
+		ImGui::SliderFloat3("Direction", &camera.Direction[0], -1.0f, 1.0f);
+		camera.Direction = glm::normalize(camera.Direction);
+		ImGui::End();
+
+
 		ImGuiRenderer::End();
-		
+
+		//Camera movement
+		camera.Update();
+
 		//End of loop
 		glfwSwapBuffers(window.GetWindow());
 		glfwPollEvents();

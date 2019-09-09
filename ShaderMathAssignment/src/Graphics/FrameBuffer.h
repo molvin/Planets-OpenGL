@@ -8,10 +8,11 @@ public:
 	FrameBuffer(const int width, const int height);
 	void Bind();
 	void Unbind();
-	void BindTexture();
+	const Texture* GetDepthTexture() const { return &_depthTexture; }
+	const Texture* GetColorTexture() const { return &_colorTexture; }
 private:
 	GLuint _handle;
-	GLuint _colorTextureHandle;
-	GLuint _depthTextureHandle;
+	Texture _colorTexture;
+	Texture _depthTexture;
 };
 
