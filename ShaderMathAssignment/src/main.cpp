@@ -87,6 +87,7 @@ const std::string skyBoxImages[] =
 //TODO: Cleanup
 //TODO: better planet generation, multiple noise filters
 //TODO: planet save settings
+//TODO: fråga emil om att gömma seams
 
 int main()
 {
