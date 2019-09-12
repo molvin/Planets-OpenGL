@@ -26,6 +26,7 @@ private:
 class VertexBuffer
 {
 public:
+	VertexBuffer() = default;
 	VertexBuffer(const float* data, const int size, const BufferLayout& layout);
 	~VertexBuffer();
 	void Bind();
@@ -39,6 +40,7 @@ private:
 class IndexBuffer
 {
 public:
+	IndexBuffer() = default;
 	IndexBuffer(const unsigned* indices, unsigned count);
 	~IndexBuffer();
 	void Bind();

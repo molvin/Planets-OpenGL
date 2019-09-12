@@ -11,7 +11,6 @@
 #include <assimp/scene.h>
 #include "../ImGUI/imgui.h"
 
-Mesh::Mesh() { }
 Mesh::Mesh(const std::string& path)
 {	
 	Assimp::Importer Importer;
@@ -47,7 +46,7 @@ Mesh::Mesh(const std::string& path)
 		}
 	}
 
-	//TODO: should be set by the obj loader
+	//TODO: should be set by the obj loader, also this goes out of scope at the end of the constructor, destroying the reference to it in the vbo
 	BufferLayout layout;
 	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), 0);
 	layout.AddLayoutElement(2, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * 3);

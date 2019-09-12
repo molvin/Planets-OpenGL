@@ -42,12 +42,24 @@ void Planet::RenderGui()
 
 
 	const bool regenerate = ImGui::Button("Regenerate");
+	const bool save = ImGui::Button("Save to file");
+	const bool load = ImGui::Button("Load from file");
 	ImGui::End();
 
 	if (regenerate)
-	{
 		GeneratePlanet();
-	}
+	if (save)
+		Save();
+	if(load)
+		Load();
+}
+
+void Planet::Save()
+{
+}
+
+void Planet::Load()
+{
 }
 
 void Planet::GeneratePlanet()

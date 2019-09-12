@@ -23,6 +23,8 @@ public:
 	~Planet();
 	void Render(Material& material);
 	void RenderGui();
+	void Save();
+	void Load();
 	
 private:
 	void GeneratePlanet();

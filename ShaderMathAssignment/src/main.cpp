@@ -157,7 +157,6 @@ int main()
 	//Planet
 	PlanetSettings settings;
 	settings.Noise.push_back(NoiseSettings());
-	settings.Resolution = 3;
 	Planet planet(settings);
 
 	//Main loop

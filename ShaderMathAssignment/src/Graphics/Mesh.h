@@ -7,6 +7,7 @@
 #include "Material.h"
 #include "../Transform.h"
 #include <sstream>
+#include "VertexBuffer.h"
 
 struct MeshTemplate;
 class BufferLayout;
