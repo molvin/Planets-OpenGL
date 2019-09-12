@@ -55,4 +55,6 @@ void main()
 	//Lighting
 	o_Color.xyz *= (u_DiffuseColor * diffuse) + (u_AmbientColor * ambient);
 	o_Color.xyz += (u_SpecularColor * specular);
+
+	o_Color.xyz = f_Normal;//f_Normal * 0.5f + 0.5f;
 }

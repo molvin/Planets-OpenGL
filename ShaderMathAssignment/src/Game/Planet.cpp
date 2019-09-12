@@ -138,12 +138,14 @@ PlanetFace::PlanetFace(const int resolution, const glm::vec3& localUp, PlanetSet
 		Vertex* v3 = &vertices[indices[i + 2]];
 
 		glm::vec3 normal = glm::normalize(glm::cross(v2->position - v1->position, v3->position - v1->position));
-		v1->normal += normal;
-		v2->normal += normal;
-		v3->normal += normal;
+		v1->normal = v2->normal = v3->normal = normal;
+		//v1->normal += normal;
+		//v2->normal += normal;
+		//v3->normal += normal;
+		//printf("Normal for triangle %i: (x: %f, y:%f, z:%f)\n", i / 3, normal.x, normal.y, normal.z);
 	}
-	for (int i = 0; i < vertexCount; i++)
-		vertices[i].normal = glm::normalize(vertices[i].normal);
+	//for (int i = 0; i < vertexCount; i++)
+	//	vertices[i].normal = glm::normalize(vertices[i].normal);
 
 	const int vertexSize = sizeof(float) * 6;
 	BufferLayout layout;
