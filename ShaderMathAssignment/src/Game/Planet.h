@@ -10,17 +10,16 @@ class PlanetFace
 {
 public:
 	PlanetFace(const int resolution, const glm::vec3 & localUp, PlanetSettings & settings, MinMaxFloat& elevation);
-	~PlanetFace();
 	const Mesh& GetMesh() const { return *_mesh; }
 private:
-	Mesh* _mesh;
+	std::unique_ptr<Mesh> _mesh;
 };
 
 class Planet
 {
 public:
+	Planet(std::string path);
 	Planet(PlanetSettings& settings);
-	~Planet();
 	void Render(Material& material);
 	void RenderGui();
 	void Save();
@@ -29,9 +28,10 @@ public:
 private:
 	void GeneratePlanet();
 
-	PlanetFace* _faces[6] = {nullptr};
+	std::unique_ptr<PlanetFace> _faces[6];
 	Transform _transform;
 	MinMaxFloat _elevation = MinMaxFloat(1000000, -100000000);
 	PlanetSettings* _settings;
+	std::string _path;
 };
 

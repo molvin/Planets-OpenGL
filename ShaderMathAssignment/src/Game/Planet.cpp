@@ -3,24 +3,25 @@
 #include "../Graphics/Renderer.h"
 #include "PlanetSettings.h"
 #include "../ImGUI/imgui.h"
+#include "fstream"
+#include "filesystem"
 
 
 //----- Planet -----
+Planet::Planet(std::string path)
+{
+	_path = path;
+	Load();
+}
 Planet::Planet(PlanetSettings& settings)
 {
 	_settings = &settings;
 	GeneratePlanet();
 }
-
-Planet::~Planet()
-{
-	//delete[] _faces;
-}
-
 void Planet::Render(Material& material)
 {
 	material.SetUniform("u_ElevationMinMax", glm::vec2(_elevation.Min, _elevation.Max));
-	for (auto& face : _faces)
+	for (std::unique_ptr<PlanetFace>& face : _faces)
 	{
 		Renderer::Render(&material, face->GetMesh().GetVertexArray(), _transform.GetMatrix());
 	}
@@ -56,10 +57,70 @@ void Planet::RenderGui()
 
 void Planet::Save()
 {
+	if (_path.empty())
+		return;
+	std::ofstream file(_path);
+	file << _settings->Resolution << "\n";
+	file << _settings->Radius << "\n";
+	const int size = _settings->Noise.size();
+	file << size << "\n";
+	for(int i = 0; i < size; i++)
+	{
+		file << _settings->Noise[i].Enabled << "\n";
+		file << _settings->Noise[i].UseFirstLayerAsMask << "\n";
+		file << _settings->Noise[i].Strength << "\n";
+		file << _settings->Noise[i].LayerCount << "\n";
+		file << _settings->Noise[i].BaseRoughness << "\n";
+		file << _settings->Noise[i].Roughness << "\n";
+		file << _settings->Noise[i].Persistence << "\n";
+		file << _settings->Noise[i].MinValue << "\n";
+		file << _settings->Noise[i].Center.x << "\n";
+		file << _settings->Noise[i].Center.y << "\n";
+		file << _settings->Noise[i].Center.z << "\n";
+
+	}
+	file.close();
 }
 
 void Planet::Load()
 {
+	if (!std::filesystem::exists(_path))
+	{
+		_settings = new PlanetSettings();
+		_settings->Noise.emplace_back();
+		Save();
+	}
+	else
+	{
+		_settings = new PlanetSettings();
+		std::ifstream file(_path);
+		if(!file)
+		{
+			printf("Failed to read file at: %s", _path.c_str());
+		}
+		file >> _settings->Resolution;
+		file >> _settings->Radius;
+		int size = 0;
+		file >> size;
+		_settings->Noise.resize(size);
+		for (int i = 0; i < size; i++)
+		{
+			file >> _settings->Noise[i].Enabled;
+			file >> _settings->Noise[i].UseFirstLayerAsMask;
+			file >> _settings->Noise[i].Strength;
+			file >> _settings->Noise[i].LayerCount;
+			file >> _settings->Noise[i].BaseRoughness;
+			file >> _settings->Noise[i].Roughness;
+			file >> _settings->Noise[i].Persistence;
+			file >> _settings->Noise[i].MinValue;
+			file >> _settings->Noise[i].Center.x;
+			file >> _settings->Noise[i].Center.y;
+			file >> _settings->Noise[i].Center.z;
+		}
+
+		file.close();
+	}	
+	GeneratePlanet();
 }
 
 void Planet::GeneratePlanet()
@@ -77,8 +138,7 @@ void Planet::GeneratePlanet()
 	_elevation.Reset(1000000, -100000);
 	for (int i = 0; i < 6; i++)
 	{
-		delete _faces[i];
-		_faces[i] = new PlanetFace(_settings->Resolution, directions[i], *_settings, _elevation);
+		_faces[i] = std::make_unique<PlanetFace>(_settings->Resolution, directions[i], *_settings, _elevation);
 	}
 
 	printf("Elevation: min: %f, max: %f \n", _elevation.Min, _elevation.Max);
@@ -138,23 +198,18 @@ PlanetFace::PlanetFace(const int resolution, const glm::vec3& localUp, PlanetSet
 		Vertex* v3 = &vertices[indices[i + 2]];
 
 		glm::vec3 normal = glm::normalize(glm::cross(v2->position - v1->position, v3->position - v1->position));
-		v1->normal = v2->normal = v3->normal = normal;
-		//v1->normal += normal;
-		//v2->normal += normal;
-		//v3->normal += normal;
+		//v1->normal = v2->normal = v3->normal = normal;
+		v1->normal += normal;
+		v2->normal += normal;
+		v3->normal += normal;
 		//printf("Normal for triangle %i: (x: %f, y:%f, z:%f)\n", i / 3, normal.x, normal.y, normal.z);
 	}
-	//for (int i = 0; i < vertexCount; i++)
-	//	vertices[i].normal = glm::normalize(vertices[i].normal);
+	for (int i = 0; i < vertexCount; i++)
+		vertices[i].normal = glm::normalize(vertices[i].normal);
 
 	const int vertexSize = sizeof(float) * 6;
 	BufferLayout layout;
 	layout.AddLayoutElement(3, GL_FLOAT, false, vertexSize, 0);
 	layout.AddLayoutElement(3, GL_FLOAT, false, vertexSize, sizeof(float) * 3);
-	_mesh = new Mesh(&vertices[0].position[0], vertexSize, vertexCount, &indices[0], indexCount, layout);
-}
-
-PlanetFace::~PlanetFace()
-{
-	delete _mesh;
+	_mesh = std::make_unique<Mesh>(&vertices[0].position[0], vertexSize, vertexCount, &indices[0], indexCount, layout);
 }

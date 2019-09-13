@@ -22,7 +22,6 @@ struct Vertex
 class Mesh
 {
 public:
-	Mesh();
 	Mesh(const std::string& path);
 	Mesh(float* vertices, const unsigned int vertexSize, const unsigned int vertexCount, unsigned int* indices, const unsigned int indexCount, const BufferLayout& layout);
 	~Mesh();

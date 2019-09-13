@@ -1,11 +1,7 @@
 #include "Texture.h"
 #include <SOIL.h>
 
-Texture::Texture()
-{
-}
-
-Texture::Texture(const std::string& path, const unsigned slot)
+Texture::Texture(const std::string& path)
 {
 	unsigned char* pixels = SOIL_load_image(path.c_str(), &_width, &_height, &_channels, SOIL_LOAD_RGBA);
 
@@ -20,17 +16,15 @@ Texture::Texture(const std::string& path, const unsigned slot)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
 	SOIL_free_image_data(pixels);
-
-	_slot = slot;
 }
 
 Texture::~Texture()
 {
 	glDeleteTextures(1, &TextureId);
 }
-void Texture::Bind() const
+void Texture::Bind(const int slot) const
 {
-	glBindTextureUnit(_slot, TextureId);
+	glBindTextureUnit(slot, TextureId);
 }
 void Texture::SwizzleRows(unsigned char* data)
 {

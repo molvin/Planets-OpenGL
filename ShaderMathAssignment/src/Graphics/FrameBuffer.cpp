@@ -25,9 +25,6 @@ FrameBuffer::FrameBuffer(const int width, const int height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-	_colorTexture.SetSlot(0);
-	_depthTexture.SetSlot(1);
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

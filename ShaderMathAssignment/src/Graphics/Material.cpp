@@ -26,13 +26,13 @@ void Material::Bind() const
 		else if (auto value = std::get_if<glm::mat4>(&data))
 			_shader->UploadUniformMat4(name, *value);
 	}
-	for (auto const &texture : _textures)
-		texture->Bind();
+	for (const std::tuple<const Texture*, int>& texture : _textures)
+		std::get<0>(texture)->Bind(std::get<1>(texture));
 }
 
-void Material::AddTexture(const Texture* texture)
+void Material::AddTexture(const Texture* texture, const int slot)
 {
-	_textures.push_back(texture);
+	_textures.emplace_back(texture, slot);
 }
 void Material::SetUniform(const std::string& name, const std::variant<float, int, glm::vec2, glm::vec3, glm::mat4>& value)
 {

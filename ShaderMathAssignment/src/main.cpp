@@ -10,7 +10,6 @@
 #include "Transform.h"
 #include "Camera.h"
 #include "Application/Input.h"
-#include "ImGUI/imgui.h"
 #include "Graphics/FrameBuffer.h"
 #include "ImGUI/ImGuiRenderer.h"
 #include "Time.h"
@@ -18,6 +17,7 @@
 #include "Game/PlanetSettings.h"
 #include "Graphics/VertexBuffer.h"
 #include "Graphics/CubeMap.h"
+#include "DirectionalLight.h"
 
 float cubeVertexData[] = {
 	//Front face
@@ -82,12 +82,9 @@ const std::string skyBoxImages[] =
 	"res/Skybox/purplenebula_bk.tga",
 };
 
-//TODO: texture slots should be managed by materials not textures
-//TODO: Set light color (ambient, diffuse, specular), make directional light class
 //TODO: Cleanup
 //TODO: better planet generation, multiple noise filters
 //TODO: planet save settings
-//TODO: fråga emil om att gömma seams
 
 int main()
 {
@@ -106,7 +103,8 @@ int main()
 	//Meshes
 	Mesh mesh("res/TRex.fbx");
 	Mesh cube(cubeVertexData, sizeof(float) * 8, 24, cubeIndexData, 36, layout);
-	mesh.GetTransform()->Position = glm::vec3(-5.0f, -5.0f, 0.0f);
+	mesh.GetTransform()->Position = glm::vec3(0.0f, 0.9f, 0.0f);
+	mesh.GetTransform()->Scale = glm::vec3(0.1f);
 	cube.GetTransform()->Scale = glm::vec3(10);
 	cube.GetTransform()->Position = glm::vec3(0.0f, -15, 0.0f);
 
@@ -132,73 +130,76 @@ int main()
 	FrameBuffer frameBuffer(2000, 2000);
 
 	//Textures
-	Texture uvTestTexure("res/uv_test.jpg", 0);
-	Texture toonTexture("res/toon.png", 0);
-	Texture planetTexture("res/gradient.png", 0);
+	Texture uvTestTexure("res/uv_test.jpg");
+	Texture toonTexture("res/toon.png");
+	Texture planetTexture("res/gradient.png");
 	CubeMap  skybox(skyBoxImages);
 	material3D.SetUniform("u_LightBuffer", 1);
 	planetMaterial.SetUniform("u_Sampler", 0);
-	postProcessMaterial.AddTexture(frameBuffer.GetColorTexture());
-	postProcessMaterial.AddTexture(frameBuffer.GetDepthTexture());
-	material3D.AddTexture(&uvTestTexure);
-	material3D.AddTexture(lightBuffer.GetDepthTexture());
-	planetMaterial.AddTexture(&planetTexture);
+	postProcessMaterial.AddTexture(frameBuffer.GetColorTexture(), 0);
+	postProcessMaterial.AddTexture(frameBuffer.GetDepthTexture(), 1);
+	material3D.AddTexture(&uvTestTexure, 0);
+	material3D.AddTexture(lightBuffer.GetDepthTexture(), 1);
+	planetMaterial.AddTexture(&planetTexture, 0);
 	
 	//Camera
 	Camera camera(glm::vec3(19.0f, 9.4f, -9.74f));
 	camera.Direction = glm::vec3(-0.859f, -0.329f, 0.392f);
 
 	//Light
-	glm::vec3 lightDir = glm::vec3(-1.0f, -1.0f, -1.0f);
 	float specularIntensity = 0.4f;
-	glm::mat4 lightProjection = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -30.f, 30.0f);
-	glm::mat4 lightView = glm::lookAt(glm::vec3(0.0f), lightDir, glm::vec3(0.0f, 1.0f, 0.0f));
+	DirectionalLight light;
 
 	//Planet
-	PlanetSettings settings;
-	settings.Resolution = 2;
-	settings.Noise.push_back(NoiseSettings());
-	Planet planet(settings);
-
+	//PlanetSettings settings;
+	//settings.Resolution = 2;
+	//settings.Noise.emplace_back();	//Adding one default noise filter
+	//Planet planet(settings);
+	Planet planet("res/Planet.txt");
+	
 	//Main loop
 	Renderer::Init();
 	while (window.Open())
 	{
-		skyboxMaterial.SetUniform("u_Projection", window.GetProjectionMatrix());
-		skyboxMaterial.SetUniform("u_View", camera.GetViewMatrix());
-		
-		material3D.SetUniform("u_EyePosition", camera.Position);
-		planetMaterial.SetUniform("u_EyePosition", camera.Position);
-
-		lightView = glm::lookAt(glm::vec3(0.0f), lightDir, glm::vec3(0.0f, 1.0f, 0.0f));
-		material3D.SetUniform("u_LightViewProjection", lightProjection * lightView);
-
-		//TODO: this could be done better
-		material3D.SetUniform("u_LightDirection", lightDir);
-		planetMaterial.SetUniform("u_LightDirection", lightDir);
+		//Uniform setting
+		material3D.SetUniform("u_LightDirection", light.Direction);
+		planetMaterial.SetUniform("u_LightDirection", light.Direction);
+		material3D.SetUniform("u_DiffuseColor", light.Color);
+		planetMaterial.SetUniform("u_DiffuseColor", light.Color);
+		material3D.SetUniform("u_DiffuseIntensity", light.Intensity);
+		planetMaterial.SetUniform("u_DiffuseIntensity", light.Intensity);
 		material3D.SetUniform("u_SpecularIntensity", specularIntensity);
 		planetMaterial.SetUniform("u_SpecularIntensity", specularIntensity);
 
+		material3D.SetUniform("u_EyePosition", camera.Position);
+		material3D.SetUniform("u_LightViewProjection", light.GetLightProjection() * light.GetLightView());
+		
+		planetMaterial.SetUniform("u_EyePosition", camera.Position);
+		skyboxMaterial.SetUniform("u_Projection", window.GetProjectionMatrix());
+		skyboxMaterial.SetUniform("u_View", camera.GetViewMatrix());
 		//Rendering
+		//Light render for shadows
 		lightBuffer.Bind();
-
-		//Light render
-		glViewport(0, 0, 4096, 4096);
-		Renderer::Begin(lightProjection * lightView);
-		Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
-		Renderer::Render(&material3D, cube.GetVertexArray(), cube.GetTransform()->GetMatrix());
+		{
+			glViewport(0, 0, 4096, 4096);
+			Renderer::Begin(light.GetLightProjection() * light.GetLightView());
+			Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
+			Renderer::Render(&material3D, cube.GetVertexArray(), cube.GetTransform()->GetMatrix());
+		}
 		lightBuffer.Unbind();
 
 		//Render to frame buffer
 		frameBuffer.Bind();
-		glViewport(0, 0, 2000, 2000);
-		Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());		
-		Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
-		Renderer::Render(&material3D, cube.GetVertexArray(), cube.GetTransform()->GetMatrix());
-		planet.Render(planetMaterial);
-		skybox.Bind(0);
-		Transform transform;
-		Renderer::Render(&skyboxMaterial, cube.GetVertexArray(), transform.GetMatrix());
+		{
+			glViewport(0, 0, 2000, 2000);
+			Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
+			Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
+			Renderer::Render(&material3D, cube.GetVertexArray(), cube.GetTransform()->GetMatrix());
+			planet.Render(planetMaterial);
+			skybox.Bind(0);
+			Transform transform;
+			Renderer::Render(&skyboxMaterial, cube.GetVertexArray(), transform.GetMatrix());
+		}
 		frameBuffer.Unbind();
 		
 		//Render from frame buffer
@@ -208,30 +209,21 @@ int main()
 
 		//ImGUI
 		ImGuiRenderer::Begin();
-
-		planet.RenderGui();	
-		mesh.DrawGui("Mesh");
-		cube.DrawGui("Cube");
-
-		//Light settings
-		ImGui::Begin("Light Direction");
-		ImGui::SliderFloat3("Direction", &lightDir[0], -1.0f, 1.0f);
-		ImGui::InputFloat("Specular Intensity", &specularIntensity);
-		lightDir = normalize(lightDir);
-		ImGui::End();
-
-		//Camera settings //TODO: add fov, clip planes
-		ImGui::Begin("Camera");
-		ImGui::InputFloat3("Position", &camera.Position[0]);
-		ImGui::SliderFloat3("Direction", &camera.Direction[0], -1.0f, 1.0f);
-		camera.Direction = glm::normalize(camera.Direction);
-		ImGui::End();
-
+		{
+			//Planet
+			planet.RenderGui();
+			//Meshes
+			mesh.DrawGui("Mesh");
+			cube.DrawGui("Cube");
+			//Light settings
+			light.DrawGui();
+			//Camera settings
+			camera.DrawGui();
+		}
 		ImGuiRenderer::End();
 
 		//Camera movement
 		camera.Update();
-
 		//End of loop
 		glfwSwapBuffers(window.GetWindow());
 		glfwPollEvents();

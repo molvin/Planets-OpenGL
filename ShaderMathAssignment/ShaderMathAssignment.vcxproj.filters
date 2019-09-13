@@ -24,9 +24,9 @@
     <ClCompile Include="src\Time.cpp" />
     <ClCompile Include="src\Game\Planet.cpp" />
     <ClCompile Include="src\Game\PlanetSettings.cpp" />
-    <ClCompile Include="src\Noise\FastNoise.cpp" />
     <ClCompile Include="src\MinMaxFloat.cpp" />
     <ClCompile Include="src\Graphics\CubeMap.cpp" />
+    <ClCompile Include="src\DirectionalLight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Camera.h" />
@@ -53,8 +53,8 @@
     <ClInclude Include="src\Time.h" />
     <ClInclude Include="src\Game\Planet.h" />
     <ClInclude Include="src\Game\PlanetSettings.h" />
-    <ClInclude Include="src\Noise\FastNoise.h" />
     <ClInclude Include="src\MinMaxFloat.h" />
     <ClInclude Include="src\Graphics\CubeMap.h" />
+    <ClInclude Include="src\DirectionalLight.h" />
   </ItemGroup>
 </Project>

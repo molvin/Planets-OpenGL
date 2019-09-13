@@ -4,6 +4,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include "Application/Input.h"
 #include "Time.h"
+#include "ImGUI/imgui.h"
 
 Camera::Camera(glm::vec3 position) : Position(position)
 {
@@ -29,6 +30,16 @@ void Camera::Rotate(const float angle, const glm::vec3& axis)
 	glm::quat rotation = glm::angleAxis(glm::radians(angle), axis);
 	Direction = rotation * Direction;
 }
+
+void Camera::DrawGui()
+{
+	ImGui::Begin("Camera");
+	ImGui::InputFloat3("Position", &Position[0]);
+	ImGui::SliderFloat3("Direction", &Direction[0], -1.0f, 1.0f);
+	Direction = glm::normalize(Direction);
+	ImGui::End();
+}
+
 glm::mat4 Camera::GetViewMatrix()
 {
 	return glm::lookAt(Position, Position + Direction, glm::vec3(0.0f, 1.0f, 0.0f));

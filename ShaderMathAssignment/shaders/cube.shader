@@ -32,6 +32,8 @@ uniform vec3 u_LightDirection;
 uniform vec3 u_EyePosition;
 uniform float u_SpecularIntensity;
 uniform mat4 u_LightViewProjection;
+uniform vec3 u_DiffuseColor = vec3(0.8, 0.9, 1.0);
+uniform float u_DiffuseIntensity = 1.0f;
 
 out vec4 o_Color;
 in vec3 f_Color;
@@ -39,12 +41,32 @@ in vec2 f_uv;
 in vec3 f_Normal;
 in vec3 f_World;
 
-const vec3 DiffuseColor = vec3(0.8, 0.9, 1.0);
 const vec3 AmbientColor = vec3(1.0f, 0.8, 0.2);
 const vec3 SpecularColor = vec3(1.0f, 0.9, 0.7);
 const float SpecExponent = 30.0f;
 const float SpecIntensity = 0.4f;
 const float ShadowBias = 0.01;
+
+struct PointLight
+{
+	vec3 Position;
+	float Radius;
+	vec3 Color;
+};
+
+vec3 CalculatePointLight(PointLight light, vec3 albedo)
+{
+	vec3 lightDirection = normalize(f_World - light.Position);
+	float intensity = 1.0f - length(f_World - light.Position) / light.Radius;
+	vec3 diffuse = albedo * light.Color * intensity * max(-dot(lightDirection, f_Normal), 0.0f);
+	vec3 worldEye = normalize(u_EyePosition - lightDirection);
+	vec3 halfwayVector = normalize(worldEye - lightDirection);
+	float spec = max(dot(halfwayVector, f_Normal), 0.0f);
+	spec = pow(spec, SpecExponent) * u_SpecularIntensity;
+
+	//TODO: add spec, also use this method
+	return diffuse + (light.Color * spec);
+}
 
 void main()
 {
@@ -66,7 +88,7 @@ void main()
 	diffuse *= shadow;
 
 	o_Color = texture(u_Sampler0, f_uv);
-	o_Color.xyz *= (DiffuseColor * diffuse) + (AmbientColor * ambient);
+	o_Color.xyz *= (u_DiffuseColor * diffuse * u_DiffuseIntensity) + (AmbientColor * ambient);
 	o_Color.xyz += (SpecularColor * specular);
 	//o_Color.xyz = vec3(shadow);
 	//o_Color = vec4(f_Normal, 1.0f);

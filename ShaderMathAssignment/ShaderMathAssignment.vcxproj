@@ -97,7 +97,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;glew32s.lib;SOIL.lib;assimp.lib;zlibd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;libnoise.lib;opengl32.lib;glew32s.lib;SOIL.lib;assimp.lib;zlibd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -111,7 +111,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;libnoise.lib;opengl32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -129,7 +129,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;libnoise.lib;opengl32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -147,11 +147,12 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;libnoise.lib;opengl32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\DirectionalLight.cpp" />
     <ClCompile Include="src\Graphics\CubeMap.cpp" />
     <ClCompile Include="src\MinMaxFloat.cpp" />
     <ClCompile Include="src\Game\PlanetSettings.cpp" />
@@ -175,11 +176,11 @@
     <ClCompile Include="src\Graphics\VertexArray.cpp" />
     <ClCompile Include="src\Graphics\Texture.cpp" />
     <ClCompile Include="src\Application\Window.cpp" />
-    <ClCompile Include="src\Noise\FastNoise.cpp" />
     <ClCompile Include="src\Transform.cpp" />
     <ClCompile Include="src\Time.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\DirectionalLight.h" />
     <ClInclude Include="src\Graphics\CubeMap.h" />
     <ClInclude Include="src\MinMaxFloat.h" />
     <ClInclude Include="src\Game\PlanetSettings.h" />
@@ -204,7 +205,6 @@
     <ClInclude Include="src\Graphics\VertexArray.h" />
     <ClInclude Include="src\Graphics\Texture.h" />
     <ClInclude Include="src\Application\Window.h" />
-    <ClInclude Include="src\Noise\FastNoise.h" />
     <ClInclude Include="src\Transform.h" />
     <ClInclude Include="src\Time.h" />
   </ItemGroup>
