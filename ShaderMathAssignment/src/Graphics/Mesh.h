@@ -5,12 +5,9 @@
 #include <glm/vec4.hpp>
 #include "VertexArray.h"
 #include "Material.h"
-#include "../Transform.h"
-#include <sstream>
+#include "../Core/Transform.h"
 #include "VertexBuffer.h"
 
-struct MeshTemplate;
-class BufferLayout;
 class Shader;
 
 struct Vertex
@@ -23,21 +20,19 @@ class Mesh
 {
 public:
 	Mesh(const std::string& path);
-	Mesh(float* vertices, const unsigned int vertexSize, const unsigned int vertexCount, unsigned int* indices, const unsigned int indexCount, const BufferLayout& layout);
-	~Mesh();
-	void Init(const float* vertices, const unsigned int vertexSize, const unsigned int vertexCount, const unsigned int* indices, const unsigned int indexCount, const BufferLayout& layout);
+	Mesh(float* vertices, const unsigned int vertexSize, const unsigned int vertexCount, unsigned int* indices, const unsigned int indexCount, const std::vector<LayoutElement> layout);
 	void DrawGui(const std::string& name);
 	void SetMaterial(Material* material) { _material = material; }
-	const VertexArray* GetVertexArray() const { return _vao; }
+	const VertexArray* GetVertexArray() const { return &_vao; }
 	Transform* GetTransform() { return &_transform; }
 	const Material* GetMaterial() const { return _material; }
+
 	static void LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices);
 protected:
-	VertexArray* _vao;
-	VertexBuffer* _vbo;
-	IndexBuffer* _ibo;
+	VertexArray _vao;
+	VertexBuffer _vbo;
+	IndexBuffer _ibo;
 	Material* _material;
 	Transform _transform;
-	glm::vec3 _euler;
 };
 

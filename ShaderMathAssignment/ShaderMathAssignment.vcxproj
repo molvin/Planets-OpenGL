@@ -156,7 +156,7 @@
     <ClCompile Include="src\Graphics\Light\PointLight.cpp" />
     <ClCompile Include="src\Graphics\Light\DirectionalLight.cpp" />
     <ClCompile Include="src\Graphics\CubeMap.cpp" />
-    <ClCompile Include="src\MinMaxFloat.cpp" />
+    <ClCompile Include="src\Game\MinMaxFloat.cpp" />
     <ClCompile Include="src\Game\PlanetSettings.cpp" />
     <ClCompile Include="src\Game\Planet.cpp" />
     <ClCompile Include="src\ImGUI\ImGuiRenderer.cpp" />
@@ -168,7 +168,7 @@
     <ClCompile Include="src\ImGUI\imgui_impl_opengl3.cpp" />
     <ClCompile Include="src\ImGUI\imgui_widgets.cpp" />
     <ClCompile Include="src\Application\Input.cpp" />
-    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\Game\Camera.cpp" />
     <ClCompile Include="src\Graphics\Material.cpp" />
     <ClCompile Include="src\Graphics\Mesh.cpp" />
     <ClCompile Include="src\Graphics\Renderer.cpp" />
@@ -178,15 +178,15 @@
     <ClCompile Include="src\Graphics\VertexArray.cpp" />
     <ClCompile Include="src\Graphics\Texture.cpp" />
     <ClCompile Include="src\Application\Window.cpp" />
-    <ClCompile Include="src\Transform.cpp" />
-    <ClCompile Include="src\Time.cpp" />
+    <ClCompile Include="src\Core\Transform.cpp" />
+    <ClCompile Include="src\Core\Time.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Graphics\Light\Light.h" />
     <ClInclude Include="src\Graphics\Light\PointLight.h" />
     <ClInclude Include="src\Graphics\Light\DirectionalLight.h" />
     <ClInclude Include="src\Graphics\CubeMap.h" />
-    <ClInclude Include="src\MinMaxFloat.h" />
+    <ClInclude Include="src\Game\MinMaxFloat.h" />
     <ClInclude Include="src\Game\PlanetSettings.h" />
     <ClInclude Include="src\Game\Planet.h" />
     <ClInclude Include="src\ImGUI\ImGuiRenderer.h" />
@@ -200,7 +200,7 @@
     <ClInclude Include="src\ImGUI\imstb_textedit.h" />
     <ClInclude Include="src\ImGUI\imstb_truetype.h" />
     <ClInclude Include="src\Application\Input.h" />
-    <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\Game\Camera.h" />
     <ClInclude Include="src\Graphics\Material.h" />
     <ClInclude Include="src\Graphics\Mesh.h" />
     <ClInclude Include="src\Graphics\Renderer.h" />
@@ -209,8 +209,8 @@
     <ClInclude Include="src\Graphics\VertexArray.h" />
     <ClInclude Include="src\Graphics\Texture.h" />
     <ClInclude Include="src\Application\Window.h" />
-    <ClInclude Include="src\Transform.h" />
-    <ClInclude Include="src\Time.h" />
+    <ClInclude Include="src\Core\Transform.h" />
+    <ClInclude Include="src\Core\Time.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -2,8 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\Camera.cpp" />
-    <ClCompile Include="src\Transform.cpp" />
     <ClCompile Include="src\ImGUI\imgui.cpp" />
     <ClCompile Include="src\ImGUI\imgui_demo.cpp" />
     <ClCompile Include="src\ImGUI\imgui_draw.cpp" />
@@ -21,18 +19,18 @@
     <ClCompile Include="src\Graphics\Renderer.cpp" />
     <ClCompile Include="src\Graphics\Mesh.cpp" />
     <ClCompile Include="src\Graphics\FrameBuffer.cpp" />
-    <ClCompile Include="src\Time.cpp" />
     <ClCompile Include="src\Game\Planet.cpp" />
     <ClCompile Include="src\Game\PlanetSettings.cpp" />
-    <ClCompile Include="src\MinMaxFloat.cpp" />
     <ClCompile Include="src\Graphics\CubeMap.cpp" />
     <ClCompile Include="src\Graphics\Light\DirectionalLight.cpp" />
     <ClCompile Include="src\Graphics\Light\PointLight.cpp" />
     <ClCompile Include="src\Graphics\Light\Light.cpp" />
+    <ClCompile Include="src\Game\Camera.cpp" />
+    <ClCompile Include="src\Game\MinMaxFloat.cpp" />
+    <ClCompile Include="src\Core\Time.cpp" />
+    <ClCompile Include="src\Core\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Camera.h" />
-    <ClInclude Include="src\Transform.h" />
     <ClInclude Include="src\ImGUI\imconfig.h" />
     <ClInclude Include="src\ImGUI\imgui.h" />
     <ClInclude Include="src\ImGUI\imgui_internal.h" />
@@ -52,13 +50,15 @@
     <ClInclude Include="src\Graphics\Material.h" />
     <ClInclude Include="src\Graphics\Mesh.h" />
     <ClInclude Include="src\Graphics\FrameBuffer.h" />
-    <ClInclude Include="src\Time.h" />
     <ClInclude Include="src\Game\Planet.h" />
     <ClInclude Include="src\Game\PlanetSettings.h" />
-    <ClInclude Include="src\MinMaxFloat.h" />
     <ClInclude Include="src\Graphics\CubeMap.h" />
     <ClInclude Include="src\Graphics\Light\DirectionalLight.h" />
     <ClInclude Include="src\Graphics\Light\PointLight.h" />
     <ClInclude Include="src\Graphics\Light\Light.h" />
+    <ClInclude Include="src\Game\Camera.h" />
+    <ClInclude Include="src\Game\MinMaxFloat.h" />
+    <ClInclude Include="src\Core\Time.h" />
+    <ClInclude Include="src\Core\Transform.h" />
   </ItemGroup>
 </Project>

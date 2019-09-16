@@ -1,8 +1,6 @@
 #pragma once
 #include <GL/glew.h>
-
-class IndexBuffer;
-class VertexBuffer;
+#include "VertexBuffer.h"
 
 class VertexArray
 {
@@ -11,11 +9,10 @@ public:
 	~VertexArray();
 	void Bind() const;
 	void Unbind() const;
-	void AddVertexBuffer(VertexBuffer* vertexBuffer) const;
-	void SetIndexBuffer(IndexBuffer* indexBuffer);
+	void SetBuffers(const VertexBuffer& vertexBuffer, IndexBuffer* indexBuffer);
 	IndexBuffer* GetIndexBuffer() const { return _indexBuffer; }
 private:
-	GLuint _arrayId;
-	IndexBuffer* _indexBuffer;
+	GLuint _arrayId = 0;
+	IndexBuffer* _indexBuffer = nullptr;
 };
 

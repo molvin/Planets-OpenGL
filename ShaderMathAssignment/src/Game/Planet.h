@@ -1,10 +1,10 @@
 #pragma once
 #include "../Graphics/Mesh.h"
-#include "../MinMaxFloat.h"
+#include "MinMaxFloat.h"
 
 class PlanetSettings;
 
-//TODO: handle memory leaks, smart pointers
+//TODO: handle memory leak
 
 class PlanetFace
 {
@@ -31,9 +31,8 @@ private:
 
 	std::unique_ptr<PlanetFace> _faces[6];
 	Transform _transform;
-	glm::vec3 _euler;	//TODO: this should be handled by transform
 	MinMaxFloat _elevation = MinMaxFloat(1000000, -100000000);
-	PlanetSettings* _settings;
+	PlanetSettings* _settings = nullptr;
 	std::string _path;
 };
 

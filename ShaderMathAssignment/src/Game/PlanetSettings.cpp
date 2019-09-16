@@ -1,6 +1,6 @@
 #include "PlanetSettings.h"
 #include <algorithm>
-#include "../MinMaxFloat.h"
+#include "MinMaxFloat.h"
 
 glm::vec3 PlanetSettings::CalculatePointOnPlanet(const glm::vec3& point, MinMaxFloat& elevationMinMax)
 {

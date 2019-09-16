@@ -7,18 +7,18 @@
 #include "Graphics/Mesh.h"
 #include "Application/Window.h"
 #include "Graphics/Material.h"
-#include "Transform.h"
-#include "Camera.h"
+#include "Core/Transform.h"
 #include "Application/Input.h"
 #include "Graphics/FrameBuffer.h"
 #include "ImGUI/ImGuiRenderer.h"
-#include "Time.h"
 #include "Game/Planet.h"
 #include "Game/PlanetSettings.h"
 #include "Graphics/VertexBuffer.h"
 #include "Graphics/CubeMap.h"
 #include "Graphics/Light/DirectionalLight.h"
 #include "Graphics/Light/PointLight.h"
+#include "Game/Camera.h"
+#include "Core/Time.h"
 
 float cubeVertexData[] = {
 	//Front face
@@ -85,7 +85,7 @@ const std::string skyBoxImages[] =
 
 //TODO: Cleanup
 //TODO: better planet generation, multiple noise filters
-//TODO: planet save settings
+//TODO: mesh shouldn't have material or transform, make some other structure if you wanna hold that data
 
 int main()
 {
@@ -96,11 +96,12 @@ int main()
 	ImGuiRenderer::Init(window.GetWindow());
 	Time::Init();
 
-	BufferLayout layout;
-	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), 0);
-	layout.AddLayoutElement(2, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * (3));
-	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * (3 + 2));
-	
+	std::vector<LayoutElement> layout = 
+	{
+		{3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), 0},
+		{2, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * (3)},
+		{3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * (3 + 2)}
+	};
 	//Meshes
 	Mesh mesh("res/TRex.fbx");
 	Mesh cube(cubeVertexData, sizeof(float) * 8, 24, cubeIndexData, 36, layout);

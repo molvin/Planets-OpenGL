@@ -3,7 +3,6 @@
 #include <sstream>
 #include "VertexBuffer.h"
 #include "VertexArray.h"
-#include <iterator>
 #include "glm/glm.hpp"
 #include <unordered_map>
 #include <assimp/Importer.hpp>
@@ -24,16 +23,16 @@ Mesh::Mesh(const std::string& path)
 	//Read vertices
 	for(unsigned int i = 0; i < mesh->mNumVertices; i++)
 	{
-		Vertex vertex;
 		aiVector3t<float> pos = mesh->mVertices[i];
-		vertex.position = glm::vec3(pos.x, pos.y, pos.z);
-
 		aiVector3t<float> uv = mesh->mTextureCoords[0][i];
-		vertex.uv = glm::vec2(uv.x, uv.y);
-
 		aiVector3t<float> normal = mesh->mNormals[i];
-		vertex.normal = glm::vec3(normal.x, normal.y, normal.z);
 
+		Vertex vertex
+		{
+			glm::vec3(pos.x, pos.y, pos.z),
+			glm::vec2(uv.x, uv.y),
+			glm::vec3(normal.x, normal.y, normal.z)
+		};
 		vertices.push_back(vertex);
 	}
 	//Indices
@@ -46,43 +45,31 @@ Mesh::Mesh(const std::string& path)
 		}
 	}
 
-	//TODO: should be set by the obj loader, also this goes out of scope at the end of the constructor, destroying the reference to it in the vbo
-	BufferLayout layout;
-	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), 0);
-	layout.AddLayoutElement(2, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * 3);
-	layout.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * (3 + 2));
+	_vbo.SetData(&vertices[0].position[0], sizeof(float) * (3 + 2 + 3) * vertices.size());
+	_vbo.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), 0);
+	_vbo.AddLayoutElement(2, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * 3);
+	_vbo.AddLayoutElement(3, GL_FLOAT, false, sizeof(float) * (3 + 2 + 3), sizeof(float) * (3 + 2));
+	_ibo.SetData(&indices[0], indices.size());
+	_vao.SetBuffers(_vbo, &_ibo);
+	_vao.Unbind();
+}
 
-	Init(&vertices[0].position.x, sizeof(float) * (3 + 2 + 3), vertices.size(), &indices[0], indices.size(), layout);
-}
-Mesh::Mesh(float* vertices, const unsigned vertexSize, const unsigned vertexCount, unsigned* indices, const unsigned indexCount, const BufferLayout& layout)
-{	
-	Init(vertices, vertexSize, vertexCount, indices, indexCount, layout);
-}
-Mesh::~Mesh()
+Mesh::Mesh(float* vertices, const unsigned vertexSize, const unsigned vertexCount, unsigned* indices, const unsigned indexCount, const std::vector<LayoutElement> layout) :
+	_vbo(&vertices[0], vertexSize * vertexCount), _ibo(&indices[0], indexCount)
 {
-	delete(_vao);
-	delete(_vbo);
-	delete(_ibo);
+	for (const auto& e : layout)
+		_vbo.AddLayoutElement(e);
+	_vao.SetBuffers(_vbo, &_ibo);
+	_vao.Unbind();
 }
-
-void Mesh::Init(const float* vertices, const unsigned int vertexSize, const unsigned int vertexCount, const unsigned int * indices, const unsigned int indexCount, const BufferLayout& layout)
-{
-	_vao = new VertexArray();
-	_vbo = new VertexBuffer(&vertices[0], vertexSize * vertexCount, layout);
-	_ibo = new IndexBuffer(&indices[0], indexCount);
-	_vao->AddVertexBuffer(_vbo);
-	_vao->SetIndexBuffer(_ibo);
-	_vao->Unbind();
-}
-
 void Mesh::DrawGui(const std::string& name)
 {
 	ImGui::Begin(name.c_str());
 	ImGui::Text("Transform");              
 	ImGui::InputFloat3("Position", &GetTransform()->Position[0]);
-	//glm::vec3 euler = glm::eulerAngles(GetTransform()->Rotation) * 180.0f / 3.1415f;
-	ImGui::SliderFloat3("Rotation", &_euler[0], -180.0f, 180.0f);
-	GetTransform()->Rotation = glm::quat(_euler * 3.1415f / 180.0f);
+	glm::vec3 euler = GetTransform()->GetEuler();
+	const bool changed = ImGui::SliderFloat3("Rotation", &euler[0], -180.0f, 180.0f);
+	if(changed) GetTransform()->SetEuler(euler);
 	ImGui::InputFloat3("Scale", &GetTransform()->Scale[0]);
 	ImGui::End();
 }

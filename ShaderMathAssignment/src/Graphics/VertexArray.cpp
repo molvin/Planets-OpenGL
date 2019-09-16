@@ -18,25 +18,19 @@ void VertexArray::Unbind() const
 {
 	glBindVertexArray(0);
 }
-void VertexArray::AddVertexBuffer(VertexBuffer* vertexBuffer) const
+void VertexArray::SetBuffers(const VertexBuffer& vertexBuffer, IndexBuffer* indexBuffer)
 {
 	Bind();
-	vertexBuffer->Bind();
-
-	const BufferLayout layout = vertexBuffer->GetLayout();
-	const int size = layout.GetLayout().size();
-	for(int i = 0; i < size; i++)
-	{
-		const LayoutElement element = layout.GetLayout()[i];
-		glEnableVertexAttribArray(i);
-		glVertexAttribPointer(i, element.size, element.type, element.normalized, element.stride, reinterpret_cast<void*>(element.offset));
-	}	
-}
-void VertexArray::SetIndexBuffer(IndexBuffer* indexBuffer)
-{
-	Bind();
-
 	indexBuffer->Bind();
 	_indexBuffer = indexBuffer;
+
+	const std::vector<LayoutElement>& layout = vertexBuffer.GetLayout();
+	const int size = layout.size();
+	for (int i = 0; i < size; i++)
+	{
+		const LayoutElement element = layout[i];
+		glEnableVertexAttribArray(i);
+		glVertexAttribPointer(i, element.size, element.type, element.normalized, element.stride, reinterpret_cast<void*>(element.offset));
+	}
 }
 

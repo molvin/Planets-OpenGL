@@ -33,8 +33,9 @@ void Planet::RenderGui()
 
 	ImGui::Text("Transform");
 	ImGui::InputFloat3("Position", &GetTransform()->Position[0]);
-	ImGui::SliderFloat3("Rotation", &_euler[0], -180.0f, 180.0f);
-	GetTransform()->Rotation = glm::quat(_euler * 3.1415f / 180.0f);
+	glm::vec3 euler = GetTransform()->GetEuler();
+	const bool changed = ImGui::SliderFloat3("Rotation", &euler[0], -180.0f, 180.0f);
+	if(changed) GetTransform()->SetEuler(euler);
 	ImGui::InputFloat3("Scale", &GetTransform()->Scale[0]);
 	ImGui::Text("Settings");
 	ImGui::InputInt("Resolution", &_settings->Resolution);
@@ -191,11 +192,6 @@ PlanetFace::PlanetFace(const int resolution, const glm::vec3& localUp, PlanetSet
 			ti += 6;
 		}
 	}
-	glm::vec3 colors[] = {
-		glm::vec3(1.0f, 0.0f, 0.0f),
-		glm::vec3(0.0f, 1.0f, 0.0f),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-	};
 	for (int i = 0; i < indexCount; i += 3)
 	{
 		//Triangle
@@ -204,18 +200,18 @@ PlanetFace::PlanetFace(const int resolution, const glm::vec3& localUp, PlanetSet
 		Vertex* v3 = &vertices[indices[i + 2]];
 
 		glm::vec3 normal = glm::normalize(glm::cross(v2->position - v1->position, v3->position - v1->position));
-		//v1->normal = v2->normal = v3->normal = normal;
 		v1->normal += normal;
 		v2->normal += normal;
 		v3->normal += normal;
-		//printf("Normal for triangle %i: (x: %f, y:%f, z:%f)\n", i / 3, normal.x, normal.y, normal.z);
 	}
 	for (int i = 0; i < vertexCount; i++)
 		vertices[i].normal = glm::normalize(vertices[i].normal);
 
 	const int vertexSize = sizeof(float) * 6;
-	BufferLayout layout;
-	layout.AddLayoutElement(3, GL_FLOAT, false, vertexSize, 0);
-	layout.AddLayoutElement(3, GL_FLOAT, false, vertexSize, sizeof(float) * 3);
+	std::vector<LayoutElement> layout =
+	{
+		{3, GL_FLOAT, false, vertexSize, 0},
+		{3, GL_FLOAT, false, vertexSize, sizeof(float) * 3},
+	};
 	_mesh = std::make_unique<Mesh>(&vertices[0].position[0], vertexSize, vertexCount, &indices[0], indexCount, layout);
 }
