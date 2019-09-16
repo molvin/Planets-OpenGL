@@ -1,8 +1,9 @@
 #pragma once
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
+#include "Light.h"
 
-class DirectionalLight
+class DirectionalLight : public Light
 {
 public:
 	glm::vec3 Direction = glm::vec3(-1.0f);
@@ -11,5 +12,6 @@ public:
 	glm::mat4 GetLightProjection() const;
 	glm::mat4 GetLightView() const;
 	void DrawGui();
+	void UploadToMaterial(const std::string& prefix, Material& material) override;
 };
 

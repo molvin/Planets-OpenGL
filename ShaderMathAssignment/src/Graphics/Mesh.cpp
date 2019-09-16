@@ -135,15 +135,15 @@ void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::
 		{
 			int a, b, c; // position index
 			int A, B, C; // uv index
-			int d, f, g; // normal index
+			int u, v, x; // normal index
 			const char* chh = line.c_str();
-			int matches = sscanf(chh, "f %i/%i/%i %i/%i/%i %i/%i/%i", &a, &A, &d, &b, &B, &f, &c, &C, &g);
+			int matches = sscanf(chh, "f %i/%i/%i %i/%i/%i %i/%i/%i", &a, &A, &u, &b, &B, &v, &c, &C, &x);
 			a--; b--; c--;
 			A--; B--; C--;
-			d--; f--; g--;
-			positionIndices.push_back(a); uvIndices.push_back(A); normalIndices.push_back(d);
-			positionIndices.push_back(b); uvIndices.push_back(B); normalIndices.push_back(f);
-			positionIndices.push_back(c); uvIndices.push_back(C); normalIndices.push_back(g);
+			u--; v--; x--;
+			positionIndices.push_back(a); uvIndices.push_back(A); normalIndices.push_back(u);
+			positionIndices.push_back(b); uvIndices.push_back(B); normalIndices.push_back(v);
+			positionIndices.push_back(c); uvIndices.push_back(C); normalIndices.push_back(x);
 		}
 	}
 	//Construct vertices

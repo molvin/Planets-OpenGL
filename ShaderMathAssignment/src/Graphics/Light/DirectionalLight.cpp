@@ -1,11 +1,12 @@
 #include "DirectionalLight.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
-#include "ImGUI/imgui.h"
+#include "../../ImGUI/imgui.h"
+#include "../Material.h"
 
 glm::mat4 DirectionalLight::GetLightProjection() const
 {
-	return glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, -100.f, 100.0f);
+	return glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, -100.f, 100.0f);
 }
 glm::mat4 DirectionalLight::GetLightView() const
 {
@@ -19,4 +20,12 @@ void DirectionalLight::DrawGui()
 	ImGui::ColorEdit3("Color", &Color[0]);
 	Direction = normalize(Direction);
 	ImGui::End();
+}
+
+void DirectionalLight::UploadToMaterial(const std::string& prefix, Material& material)
+{
+	material.SetUniform(prefix + ".Direction", Direction);
+	material.SetUniform(prefix + ".Color", Color);
+	material.SetUniform(prefix + ".ShadowBuffer", 1);
+	material.SetUniform(prefix + ".ViewProjection", GetLightProjection() * GetLightView());
 }

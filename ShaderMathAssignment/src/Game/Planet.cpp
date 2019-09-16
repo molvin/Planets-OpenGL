@@ -13,9 +13,9 @@ Planet::Planet(std::string path)
 	_path = path;
 	Load();
 }
-Planet::Planet(PlanetSettings& settings)
+Planet::Planet(PlanetSettings* settings)
 {
-	_settings = &settings;
+	_settings = settings;
 	GeneratePlanet();
 }
 void Planet::Render(Material& material)
@@ -31,6 +31,12 @@ void Planet::RenderGui()
 {
 	ImGui::Begin("Planet Settings");
 
+	ImGui::Text("Transform");
+	ImGui::InputFloat3("Position", &GetTransform()->Position[0]);
+	ImGui::SliderFloat3("Rotation", &_euler[0], -180.0f, 180.0f);
+	GetTransform()->Rotation = glm::quat(_euler * 3.1415f / 180.0f);
+	ImGui::InputFloat3("Scale", &GetTransform()->Scale[0]);
+	ImGui::Text("Settings");
 	ImGui::InputInt("Resolution", &_settings->Resolution);
 	ImGui::InputFloat("Radius", &_settings->Radius);
 	ImGui::InputFloat("Strength", &_settings->Noise[0].Strength);

@@ -152,7 +152,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\DirectionalLight.cpp" />
+    <ClCompile Include="src\Graphics\Light\Light.cpp" />
+    <ClCompile Include="src\Graphics\Light\PointLight.cpp" />
+    <ClCompile Include="src\Graphics\Light\DirectionalLight.cpp" />
     <ClCompile Include="src\Graphics\CubeMap.cpp" />
     <ClCompile Include="src\MinMaxFloat.cpp" />
     <ClCompile Include="src\Game\PlanetSettings.cpp" />
@@ -180,7 +182,9 @@
     <ClCompile Include="src\Time.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\DirectionalLight.h" />
+    <ClInclude Include="src\Graphics\Light\Light.h" />
+    <ClInclude Include="src\Graphics\Light\PointLight.h" />
+    <ClInclude Include="src\Graphics\Light\DirectionalLight.h" />
     <ClInclude Include="src\Graphics\CubeMap.h" />
     <ClInclude Include="src\MinMaxFloat.h" />
     <ClInclude Include="src\Game\PlanetSettings.h" />

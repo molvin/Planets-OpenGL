@@ -17,7 +17,8 @@
 #include "Game/PlanetSettings.h"
 #include "Graphics/VertexBuffer.h"
 #include "Graphics/CubeMap.h"
-#include "DirectionalLight.h"
+#include "Graphics/Light/DirectionalLight.h"
+#include "Graphics/Light/PointLight.h"
 
 float cubeVertexData[] = {
 	//Front face
@@ -148,50 +149,53 @@ int main()
 
 	//Light
 	float specularIntensity = 0.4f;
-	DirectionalLight light;
+	DirectionalLight directionalLight;
+	PointLight pointLight;
+	pointLight.Position = glm::vec3(0.0f, 3.0f, 0.0f);
+	pointLight.Color = glm::vec3(0.7f, 0.3f, 0.4f);
+	pointLight.Radius = 15.0f;
 
-	//Planet
-	//PlanetSettings settings;
-	//settings.Resolution = 2;
-	//settings.Noise.emplace_back();	//Adding one default noise filter
-	//Planet planet(settings);
 	Planet planet("res/Planet.txt");
 	
 	//Main loop
 	Renderer::Init();
 	while (window.Open())
 	{
-		//Uniform setting
-		material3D.SetUniform("u_LightDirection", light.Direction);
-		planetMaterial.SetUniform("u_LightDirection", light.Direction);
-		material3D.SetUniform("u_DiffuseColor", light.Color);
-		planetMaterial.SetUniform("u_DiffuseColor", light.Color);
-		material3D.SetUniform("u_DiffuseIntensity", light.Intensity);
-		planetMaterial.SetUniform("u_DiffuseIntensity", light.Intensity);
+		//Uniform setting //TODO: some of these are set by reference, which might cause unexpected behaviour if one goes out of scope
+		planetMaterial.SetUniform("u_LightDirection", directionalLight.Direction);
+		planetMaterial.SetUniform("u_DiffuseColor", directionalLight.Color);
+		planetMaterial.SetUniform("u_DiffuseIntensity", directionalLight.Intensity);
 		material3D.SetUniform("u_SpecularIntensity", specularIntensity);
 		planetMaterial.SetUniform("u_SpecularIntensity", specularIntensity);
 
 		material3D.SetUniform("u_EyePosition", camera.Position);
-		material3D.SetUniform("u_LightViewProjection", light.GetLightProjection() * light.GetLightView());
+		material3D.SetUniform("u_LightViewProjection", directionalLight.GetLightProjection() * directionalLight.GetLightView());
 		
 		planetMaterial.SetUniform("u_EyePosition", camera.Position);
 		skyboxMaterial.SetUniform("u_Projection", window.GetProjectionMatrix());
 		skyboxMaterial.SetUniform("u_View", camera.GetViewMatrix());
+
+		
+		material3D.SetUniform("u_PointLightCount", 1);
+		directionalLight.UploadToMaterial("u_DirectionalLight", material3D);
+		directionalLight.UploadToMaterial("u_DirectionalLight", planetMaterial);
+		pointLight.UploadToMaterial("u_PointLights", 0, material3D);
 		//Rendering
 		//Light render for shadows
 		lightBuffer.Bind();
 		{
 			glViewport(0, 0, 4096, 4096);
-			Renderer::Begin(light.GetLightProjection() * light.GetLightView());
+			Renderer::Begin(directionalLight.GetLightProjection() * directionalLight.GetLightView());
 			Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
 			Renderer::Render(&material3D, cube.GetVertexArray(), cube.GetTransform()->GetMatrix());
+			planet.Render(planetMaterial);
 		}
 		lightBuffer.Unbind();
 
 		//Render to frame buffer
 		frameBuffer.Bind();
 		{
-			glViewport(0, 0, 2000, 2000);
+			glViewport(0, 0, 2048, 2048);
 			Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
 			Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
 			Renderer::Render(&material3D, cube.GetVertexArray(), cube.GetTransform()->GetMatrix());
@@ -216,7 +220,7 @@ int main()
 			mesh.DrawGui("Mesh");
 			cube.DrawGui("Cube");
 			//Light settings
-			light.DrawGui();
+			directionalLight.DrawGui();
 			//Camera settings
 			camera.DrawGui();
 		}
