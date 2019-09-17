@@ -19,6 +19,7 @@
 #include "Graphics/Light/PointLight.h"
 #include "Game/Camera.h"
 #include "Core/Time.h"
+#include "Renderable.h"
 
 float cubeVertexData[] = {
 	//Front face
@@ -105,29 +106,26 @@ int main()
 	//Meshes
 	Mesh mesh("res/TRex.fbx");
 	Mesh cube(cubeVertexData, sizeof(float) * 8, 24, cubeIndexData, 36, layout);
-	mesh.GetTransform()->Position = glm::vec3(0.0f, 0.9f, 0.0f);
-	mesh.GetTransform()->Scale = glm::vec3(0.1f);
-	cube.GetTransform()->Scale = glm::vec3(10);
-	cube.GetTransform()->Position = glm::vec3(0.0f, -15, 0.0f);
+	Transform meshTransform, cubeTransform;
+	meshTransform.Position = glm::vec3(0.0f, 0.9f, 0.0f);
+	meshTransform.Scale = glm::vec3(0.1f);
+	cubeTransform.Scale = glm::vec3(10.f, 1.f, 10.f);
+	cubeTransform.Position = glm::vec3(0.0f, -5, 0.0f);
 
 	//Shaders
-	auto[cubeVertexSource, cubeFragmentSource] = Shader::ParseShaderFile("shaders/cube.shader");
-	Shader shader3D(cubeVertexSource, cubeFragmentSource);
-	auto[postProcessVertSource, postProcessFragSource] = Shader::ParseShaderFile("shaders/post_process.shader");
-	Shader postProcessShader(postProcessVertSource, postProcessFragSource);
-	auto[planetVertSource, planetFragSource] = Shader::ParseShaderFile("shaders/planet.shader");
-	Shader planetShader(planetVertSource, planetFragSource);
-	auto[skyboxVertSource, skyboxFragSource] = Shader::ParseShaderFile("shaders/skybox.shader");
-	Shader skyboxShader(skyboxVertSource, skyboxFragSource);
+	Shader shader3D("shaders/cube.shader");
+	Shader postProcessShader("shaders/post_process.shader");
+	Shader planetShader("shaders/planet.shader");
+	Shader skyboxShader("shaders/skybox.shader");
 
 	//Materials
 	Material material3D(&shader3D);
 	Material planetMaterial(&planetShader);
 	Material postProcessMaterial(&postProcessShader);
 	Material skyboxMaterial(&skyboxShader);
-	mesh.SetMaterial(&material3D);
 	postProcessMaterial.SetUniform("u_FrameDepth", 1);
 
+	//Frame Buffers
 	FrameBuffer lightBuffer(4096, 4096);
 	FrameBuffer frameBuffer(2000, 2000);
 
@@ -157,6 +155,11 @@ int main()
 	pointLight.Radius = 15.0f;
 
 	Planet planet("res/Planet.txt");
+
+	Renderable renderable(&cube, &material3D);
+	renderable.GetTransform()->Position = glm::vec3(0.534f, 1.35f, 304.0f);
+	renderable.GetTransform()->Rotate(56.f, glm::vec3(0.0f, 1.0f, 0.0f));
+	printf("%s", renderable.GetSaveFormat().c_str());
 	
 	//Main loop
 	Renderer::Init();
@@ -175,8 +178,7 @@ int main()
 		planetMaterial.SetUniform("u_EyePosition", camera.Position);
 		skyboxMaterial.SetUniform("u_Projection", window.GetProjectionMatrix());
 		skyboxMaterial.SetUniform("u_View", camera.GetViewMatrix());
-
-		
+	
 		material3D.SetUniform("u_PointLightCount", 1);
 		directionalLight.UploadToMaterial("u_DirectionalLight", material3D);
 		directionalLight.UploadToMaterial("u_DirectionalLight", planetMaterial);
@@ -187,8 +189,8 @@ int main()
 		{
 			glViewport(0, 0, 4096, 4096);
 			Renderer::Begin(directionalLight.GetLightProjection() * directionalLight.GetLightView());
-			Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
-			Renderer::Render(&material3D, cube.GetVertexArray(), cube.GetTransform()->GetMatrix());
+			Renderer::Render(&material3D, mesh.GetVertexArray(), meshTransform.GetMatrix());
+			Renderer::Render(&material3D, cube.GetVertexArray(), cubeTransform.GetMatrix());
 			planet.Render(planetMaterial);
 		}
 		lightBuffer.Unbind();
@@ -198,8 +200,8 @@ int main()
 		{
 			glViewport(0, 0, 2048, 2048);
 			Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
-			Renderer::Render(&material3D, mesh.GetVertexArray(), mesh.GetTransform()->GetMatrix());
-			Renderer::Render(&material3D, cube.GetVertexArray(), cube.GetTransform()->GetMatrix());
+			Renderer::Render(&material3D, mesh.GetVertexArray(), meshTransform.GetMatrix());
+			Renderer::Render(&material3D, cube.GetVertexArray(), cubeTransform.GetMatrix());
 			planet.Render(planetMaterial);
 			skybox.Bind(0);
 			Transform transform;
@@ -218,8 +220,7 @@ int main()
 			//Planet
 			planet.RenderGui();
 			//Meshes
-			mesh.DrawGui("Mesh");
-			cube.DrawGui("Cube");
+			//TODO
 			//Light settings
 			directionalLight.DrawGui();
 			//Camera settings

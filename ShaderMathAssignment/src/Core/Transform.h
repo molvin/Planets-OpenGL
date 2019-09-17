@@ -2,7 +2,7 @@
 #include <glm/vec3.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-//TODO: add euler angle handling for ease of use, and ImGui
+//TODO: Add parent and apply in GetMatrix
 
 class Transform
 {

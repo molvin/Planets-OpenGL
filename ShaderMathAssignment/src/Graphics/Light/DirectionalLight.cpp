@@ -6,7 +6,7 @@
 
 glm::mat4 DirectionalLight::GetLightProjection() const
 {
-	return glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, -100.f, 100.0f);
+	return glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, -100.f, 100.0f);
 }
 glm::mat4 DirectionalLight::GetLightView() const
 {

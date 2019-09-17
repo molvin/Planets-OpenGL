@@ -23,9 +23,9 @@ Mesh::Mesh(const std::string& path)
 	//Read vertices
 	for(unsigned int i = 0; i < mesh->mNumVertices; i++)
 	{
-		aiVector3t<float> pos = mesh->mVertices[i];
-		aiVector3t<float> uv = mesh->mTextureCoords[0][i];
-		aiVector3t<float> normal = mesh->mNormals[i];
+		const aiVector3t<float> pos = mesh->mVertices[i];
+		const aiVector3t<float> uv = mesh->mTextureCoords[0][i];
+		const aiVector3t<float> normal = mesh->mNormals[i];
 
 		Vertex vertex
 		{
@@ -38,7 +38,7 @@ Mesh::Mesh(const std::string& path)
 	//Indices
 	for (unsigned int i = 0; i < mesh->mNumFaces; i++)
 	{
-		aiFace face = mesh->mFaces[i];
+		const aiFace face = mesh->mFaces[i];
 		for (unsigned int j = 0; j < face.mNumIndices; j++)
 		{
 			indices.push_back(face.mIndices[j]);
@@ -61,17 +61,6 @@ Mesh::Mesh(float* vertices, const unsigned vertexSize, const unsigned vertexCoun
 		_vbo.AddLayoutElement(e);
 	_vao.SetBuffers(_vbo, &_ibo);
 	_vao.Unbind();
-}
-void Mesh::DrawGui(const std::string& name)
-{
-	ImGui::Begin(name.c_str());
-	ImGui::Text("Transform");              
-	ImGui::InputFloat3("Position", &GetTransform()->Position[0]);
-	glm::vec3 euler = GetTransform()->GetEuler();
-	const bool changed = ImGui::SliderFloat3("Rotation", &euler[0], -180.0f, 180.0f);
-	if(changed) GetTransform()->SetEuler(euler);
-	ImGui::InputFloat3("Scale", &GetTransform()->Scale[0]);
-	ImGui::End();
 }
 
 void Mesh::LoadObj(const std::string& path, std::vector<Vertex>& vertices, std::vector<unsigned int>& indices)

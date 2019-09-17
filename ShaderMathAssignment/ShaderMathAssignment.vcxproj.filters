@@ -29,6 +29,7 @@
     <ClCompile Include="src\Game\MinMaxFloat.cpp" />
     <ClCompile Include="src\Core\Time.cpp" />
     <ClCompile Include="src\Core\Transform.cpp" />
+    <ClCompile Include="src\Renderable.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ImGUI\imconfig.h" />
@@ -60,5 +61,6 @@
     <ClInclude Include="src\Game\MinMaxFloat.h" />
     <ClInclude Include="src\Core\Time.h" />
     <ClInclude Include="src\Core\Transform.h" />
+    <ClInclude Include="src\Renderable.h" />
   </ItemGroup>
 </Project>

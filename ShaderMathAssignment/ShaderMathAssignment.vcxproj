@@ -152,6 +152,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Renderable.cpp" />
     <ClCompile Include="src\Graphics\Light\Light.cpp" />
     <ClCompile Include="src\Graphics\Light\PointLight.cpp" />
     <ClCompile Include="src\Graphics\Light\DirectionalLight.cpp" />
@@ -182,6 +183,7 @@
     <ClCompile Include="src\Core\Time.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Renderable.h" />
     <ClInclude Include="src\Graphics\Light\Light.h" />
     <ClInclude Include="src\Graphics\Light\PointLight.h" />
     <ClInclude Include="src\Graphics\Light\DirectionalLight.h" />

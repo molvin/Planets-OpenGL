@@ -31,13 +31,6 @@ void Renderer::Begin(const glm::mat4& viewProjectionMatrix)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	_sceneData->viewProjection = viewProjectionMatrix;
 }
-
-void Renderer::Render(Mesh* mesh)
-{
-	const glm::mat4 matrix = mesh->GetTransform()->GetMatrix();
-	Renderer::Render(mesh->GetMaterial(), mesh->GetVertexArray(), matrix);
-}
-
 void Renderer::Render(const Material* material, const VertexArray* vao, const glm::mat4& transform)
 {
 	vao->Bind();

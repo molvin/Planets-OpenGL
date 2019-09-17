@@ -2,6 +2,7 @@
 #include "../Graphics/Mesh.h"
 #include "MinMaxFloat.h"
 
+class Material;
 class PlanetSettings;
 
 //TODO: handle memory leak

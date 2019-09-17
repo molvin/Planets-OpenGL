@@ -8,6 +8,7 @@
 class Shader
 {
 public:
+	Shader(const std::string& path);
 	Shader(const std::string& vertexSource, const std::string& fragSource);
 	~Shader();
 	void Bind() const;
@@ -22,6 +23,7 @@ public:
 	GLint GetUniformLocation(const std::string& name) const;
 	static std::tuple<std::string, std::string> ParseShaderFile(const std::string& path);
 private:
+	void LoadShader(const std::string& vertexSource, const std::string& fragSource);
 	GLuint _programId;
 	mutable std::map<std::string, GLint> _uniformLocations;
 };

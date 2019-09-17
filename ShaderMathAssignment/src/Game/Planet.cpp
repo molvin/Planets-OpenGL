@@ -5,6 +5,7 @@
 #include "../ImGUI/imgui.h"
 #include "fstream"
 #include "filesystem"
+#include "../Graphics/Material.h"
 
 
 //----- Planet -----
