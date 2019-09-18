@@ -4,6 +4,9 @@
 #include <fstream>
 #include "glm/gtc/type_ptr.hpp"
 
+Shader::Shader()
+{
+}
 Shader::Shader(const std::string& path)
 {
 	auto[vert, frag] = ParseShaderFile(path);
@@ -16,6 +19,7 @@ Shader::Shader(const std::string& vertexSource, const std::string& fragSource)
 Shader::~Shader()
 {
 	glDeleteProgram(_programId);
+	printf("Shader destroyed\n");
 }
 void Shader::Bind() const
 {

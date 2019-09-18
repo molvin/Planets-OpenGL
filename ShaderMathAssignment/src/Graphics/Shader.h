@@ -8,6 +8,7 @@
 class Shader
 {
 public:
+	Shader();
 	Shader(const std::string& path);
 	Shader(const std::string& vertexSource, const std::string& fragSource);
 	~Shader();

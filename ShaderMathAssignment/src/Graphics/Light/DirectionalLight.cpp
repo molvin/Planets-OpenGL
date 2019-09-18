@@ -27,5 +27,6 @@ void DirectionalLight::UploadToMaterial(const std::string& prefix, Material& mat
 	material.SetUniform(prefix + ".Direction", Direction);
 	material.SetUniform(prefix + ".Color", Color);
 	material.SetUniform(prefix + ".ShadowBuffer", 1);
+	material.SetUniform(prefix + ".Intensity", Intensity);
 	material.SetUniform(prefix + ".ViewProjection", GetLightProjection() * GetLightView());
 }

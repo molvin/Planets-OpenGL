@@ -97,7 +97,9 @@ void main()
 	float value = (f_Elevation - u_ElevationMinMax.x) / (u_ElevationMinMax.y - u_ElevationMinMax.x);
 	vec3 albedo= texture(u_Sampler, vec2(clamp(value, 0.0f,1.0f), 0.0f)).xyz;
 
+	//o_Color = vec4(albedo.x, albedo.y, albedo.z, 1.0f);
 	o_Color = vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	o_Color.xyz += CalculateDirectionalLight(u_DirectionalLight, albedo);
+	o_Color.xyz += albedo;
+	//o_Color.xyz += CalculateDirectionalLight(u_DirectionalLight, albedo);
 	o_Color.xyz += ambient;
 }

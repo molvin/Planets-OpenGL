@@ -6,9 +6,7 @@ Material::Material(Shader* shader)
 {
 	_shader = shader;
 }
-Material::~Material()
-{
-}
+
 
 void Material::Bind() const
 {

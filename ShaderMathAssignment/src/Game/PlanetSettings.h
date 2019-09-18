@@ -21,11 +21,14 @@ struct NoiseSettings
 class PlanetSettings
 {
 public:
-	glm::vec3 CalculatePointOnPlanet(const glm::vec3& point, MinMaxFloat& elevationMinMax);
+	PlanetSettings() = default;
+	
+	glm::vec3 CalculatePointOnPlanet(const glm::vec3& point, MinMaxFloat& elevationMinMax) const;
 
 	int Resolution = 50;
 	float Radius = 1.0f;
 	std::vector<NoiseSettings> Noise;
+	PlanetSettings& operator=(const PlanetSettings& other);
 private:
 	float EvaluateNoise(const glm::vec3& point, const NoiseSettings& settings) const;
 	noise::module::Perlin _perlin;

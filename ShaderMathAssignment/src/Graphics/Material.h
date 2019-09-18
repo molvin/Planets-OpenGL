@@ -9,7 +9,6 @@ class Material
 {
 public:
 	Material(Shader* shader);
-	~Material();
 	void Bind() const;
 	void AddTexture(const Texture* texture, const int slot);
 	void SetUniform(const std::string& name, const std::variant<float, int, glm::vec2, glm::vec3, glm::mat4>& value);

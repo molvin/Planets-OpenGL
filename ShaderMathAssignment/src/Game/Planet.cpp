@@ -3,134 +3,67 @@
 #include "../Graphics/Renderer.h"
 #include "PlanetSettings.h"
 #include "../ImGUI/imgui.h"
-#include "fstream"
 #include "filesystem"
 #include "../Graphics/Material.h"
+#include <sstream>
+#include <utility>
+#include "../Graphics/ShaderLibrary.h"
+#include "../Graphics/Texture.h"
 
 
 //----- Planet -----
-Planet::Planet(std::string path)
+Planet::Planet() : _material(ShaderLibrary::GetShader("planet"))
 {
-	_path = path;
-	Load();
+	printf("Created planet");
 }
-Planet::Planet(PlanetSettings* settings)
+
+void Planet::Render()
 {
-	_settings = settings;
-	GeneratePlanet();
-}
-void Planet::Render(Material& material)
-{
-	material.SetUniform("u_ElevationMinMax", glm::vec2(_elevation.Min, _elevation.Max));
+	_material.SetUniform("u_ElevationMinMax", glm::vec2(_elevation.Min, _elevation.Max));
 	for (std::unique_ptr<PlanetFace>& face : _faces)
 	{
-		Renderer::Render(&material, face->GetMesh().GetVertexArray(), _transform.GetMatrix());
+		Renderer::Render(&_material, face->GetMesh().GetVertexArray(), _transform.GetMatrix());
 	}
 }
 
-void Planet::RenderGui()
+void Planet::DrawGui(bool& destroy)
 {
-	ImGui::Begin("Planet Settings");
+	std::stringstream ss;
+	ss << "Planet " << Id << "Settings";
+	ImGui::Begin(ss.str().c_str());
 
 	ImGui::Text("Transform");
 	ImGui::InputFloat3("Position", &GetTransform()->Position[0]);
 	glm::vec3 euler = GetTransform()->GetEuler();
 	const bool changed = ImGui::SliderFloat3("Rotation", &euler[0], -180.0f, 180.0f);
-	if(changed) GetTransform()->SetEuler(euler);
+	if (changed) GetTransform()->SetEuler(euler);
+
+	
 	ImGui::InputFloat3("Scale", &GetTransform()->Scale[0]);
 	ImGui::Text("Settings");
-	ImGui::InputInt("Resolution", &_settings->Resolution);
-	ImGui::InputFloat("Radius", &_settings->Radius);
-	ImGui::InputFloat("Strength", &_settings->Noise[0].Strength);
-	ImGui::InputInt("Layer Count", &_settings->Noise[0].LayerCount);
-	ImGui::InputFloat("Base Roughness", &_settings->Noise[0].BaseRoughness);
-	ImGui::InputFloat("Roughness", &_settings->Noise[0].Roughness);
-	ImGui::InputFloat("Persistence", &_settings->Noise[0].Persistence);
-	ImGui::InputFloat("MinValue", &_settings->Noise[0].MinValue);
-	ImGui::InputFloat3("Center", &_settings->Noise[0].Center.x);
+	ImGui::InputInt("Resolution", &_settings.Resolution);
+	ImGui::InputFloat("Radius", &_settings.Radius);
+	ImGui::InputFloat("Strength", &_settings.Noise[0].Strength);
+	ImGui::InputInt("Layer Count", &_settings.Noise[0].LayerCount);
+	ImGui::InputFloat("Base Roughness", &_settings.Noise[0].BaseRoughness);
+	ImGui::InputFloat("Roughness", &_settings.Noise[0].Roughness);
+	ImGui::InputFloat("Persistence", &_settings.Noise[0].Persistence);
+	ImGui::InputFloat("MinValue", &_settings.Noise[0].MinValue);
+	ImGui::InputFloat3("Center", &_settings.Noise[0].Center.x);
 
+
+
+	static ImGradientMark* draggingMark = nullptr;
+	static ImGradientMark* selectedMark = nullptr;
+	ImGui::GradientEditor(&_gradient, draggingMark, selectedMark);
 
 	const bool regenerate = ImGui::Button("Regenerate");
-	const bool save = ImGui::Button("Save to file");
-	const bool load = ImGui::Button("Load from file");
+	destroy = ImGui::Button("Destroy");
 	ImGui::End();
 
 	if (regenerate)
 		GeneratePlanet();
-	if (save)
-		Save();
-	if(load)
-		Load();
 }
-
-void Planet::Save()
-{
-	if (_path.empty())
-		return;
-	std::ofstream file(_path);
-	file << _settings->Resolution << "\n";
-	file << _settings->Radius << "\n";
-	const int size = _settings->Noise.size();
-	file << size << "\n";
-	for(int i = 0; i < size; i++)
-	{
-		file << _settings->Noise[i].Enabled << "\n";
-		file << _settings->Noise[i].UseFirstLayerAsMask << "\n";
-		file << _settings->Noise[i].Strength << "\n";
-		file << _settings->Noise[i].LayerCount << "\n";
-		file << _settings->Noise[i].BaseRoughness << "\n";
-		file << _settings->Noise[i].Roughness << "\n";
-		file << _settings->Noise[i].Persistence << "\n";
-		file << _settings->Noise[i].MinValue << "\n";
-		file << _settings->Noise[i].Center.x << "\n";
-		file << _settings->Noise[i].Center.y << "\n";
-		file << _settings->Noise[i].Center.z << "\n";
-
-	}
-	file.close();
-}
-
-void Planet::Load()
-{
-	if (!std::filesystem::exists(_path))
-	{
-		_settings = new PlanetSettings();
-		_settings->Noise.emplace_back();
-		Save();
-	}
-	else
-	{
-		_settings = new PlanetSettings();
-		std::ifstream file(_path);
-		if(!file)
-		{
-			printf("Failed to read file at: %s", _path.c_str());
-		}
-		file >> _settings->Resolution;
-		file >> _settings->Radius;
-		int size = 0;
-		file >> size;
-		_settings->Noise.resize(size);
-		for (int i = 0; i < size; i++)
-		{
-			file >> _settings->Noise[i].Enabled;
-			file >> _settings->Noise[i].UseFirstLayerAsMask;
-			file >> _settings->Noise[i].Strength;
-			file >> _settings->Noise[i].LayerCount;
-			file >> _settings->Noise[i].BaseRoughness;
-			file >> _settings->Noise[i].Roughness;
-			file >> _settings->Noise[i].Persistence;
-			file >> _settings->Noise[i].MinValue;
-			file >> _settings->Noise[i].Center.x;
-			file >> _settings->Noise[i].Center.y;
-			file >> _settings->Noise[i].Center.z;
-		}
-
-		file.close();
-	}	
-	GeneratePlanet();
-}
-
 void Planet::GeneratePlanet()
 {
 	glm::vec3 directions[] =
@@ -142,18 +75,36 @@ void Planet::GeneratePlanet()
 		glm::vec3(0.0f, 0.0f, 1.0f), //forward
 		glm::vec3(0.0f, 0.0f, -1.0f), //back
 	};
+	if(_settings.Noise.empty())
+		_settings.Noise.emplace_back();
 
 	_elevation.Reset(1000000, -100000);
 	for (int i = 0; i < 6; i++)
 	{
-		_faces[i] = std::make_unique<PlanetFace>(_settings->Resolution, directions[i], *_settings, _elevation);
+		_faces[i] = std::make_unique<PlanetFace>(_settings.Resolution, directions[i], _settings, _elevation);
 	}
 
 	printf("Elevation: min: %f, max: %f \n", _elevation.Min, _elevation.Max);
+
+	SetColors();
+}
+void Planet::SetColors()
+{
+	const int size = 100 * 4;
+	float pixels[size];
+	for(int i = 0; i < size; i += 4)
+	{
+		_gradient.getColorAt((float)i / (float)size, &pixels[i]);
+		pixels[i + 3] = 1.0f;
+	}
+
+	_texture = new Texture(&pixels[0], 100, 1);
+	_material.AddTexture(_texture, 0);
+	
 }
 
 //----- Planet Face -----
-PlanetFace::PlanetFace(const int resolution, const glm::vec3& localUp, PlanetSettings& settings, MinMaxFloat& elevation)
+PlanetFace::PlanetFace(const int resolution, const glm::vec3& localUp, const PlanetSettings& settings, MinMaxFloat& elevation)
 {
 	struct Vertex
 	{

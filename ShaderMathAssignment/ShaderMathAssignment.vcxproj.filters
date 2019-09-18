@@ -29,7 +29,9 @@
     <ClCompile Include="src\Game\MinMaxFloat.cpp" />
     <ClCompile Include="src\Core\Time.cpp" />
     <ClCompile Include="src\Core\Transform.cpp" />
-    <ClCompile Include="src\Renderable.cpp" />
+    <ClCompile Include="src\Game\SolarSystem.cpp" />
+    <ClCompile Include="src\ImGUI\imgui_color_gradient.cpp" />
+    <ClCompile Include="src\Graphics\ShaderLibrary.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ImGUI\imconfig.h" />
@@ -61,6 +63,8 @@
     <ClInclude Include="src\Game\MinMaxFloat.h" />
     <ClInclude Include="src\Core\Time.h" />
     <ClInclude Include="src\Core\Transform.h" />
-    <ClInclude Include="src\Renderable.h" />
+    <ClInclude Include="src\Game\SolarSystem.h" />
+    <ClInclude Include="src\ImGUI\imgui_color_gradient.h" />
+    <ClInclude Include="src\Graphics\ShaderLibrary.h" />
   </ItemGroup>
 </Project>

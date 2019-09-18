@@ -11,15 +11,14 @@
 #include "Application/Input.h"
 #include "Graphics/FrameBuffer.h"
 #include "ImGUI/ImGuiRenderer.h"
-#include "Game/Planet.h"
-#include "Game/PlanetSettings.h"
 #include "Graphics/VertexBuffer.h"
 #include "Graphics/CubeMap.h"
 #include "Graphics/Light/DirectionalLight.h"
 #include "Graphics/Light/PointLight.h"
 #include "Game/Camera.h"
 #include "Core/Time.h"
-#include "Renderable.h"
+#include "Game/SolarSystem.h"
+#include "Graphics/ShaderLibrary.h"
 
 float cubeVertexData[] = {
 	//Front face
@@ -86,7 +85,6 @@ const std::string skyBoxImages[] =
 
 //TODO: Cleanup
 //TODO: better planet generation, multiple noise filters
-//TODO: mesh shouldn't have material or transform, make some other structure if you wanna hold that data
 
 int main()
 {
@@ -113,14 +111,21 @@ int main()
 	cubeTransform.Position = glm::vec3(0.0f, -5, 0.0f);
 
 	//Shaders
-	Shader shader3D("shaders/cube.shader");
 	Shader postProcessShader("shaders/post_process.shader");
-	Shader planetShader("shaders/planet.shader");
 	Shader skyboxShader("shaders/skybox.shader");
 
+	{
+		auto planetShader = std::make_shared<Shader>("shaders/planet.shader");
+		auto material3D = std::make_shared<Shader>("shaders/cube.shader");
+		ShaderLibrary::AddShader("shader3D", material3D);
+		ShaderLibrary::AddShader("planet", planetShader);
+	}
+	Shader* shader3D = ShaderLibrary::GetShader("shader3D");
+	Shader* planetShader = ShaderLibrary::GetShader("planet");
+
 	//Materials
-	Material material3D(&shader3D);
-	Material planetMaterial(&planetShader);
+	Material material3D(shader3D);
+	Material planetMaterial(planetShader);
 	Material postProcessMaterial(&postProcessShader);
 	Material skyboxMaterial(&skyboxShader);
 	postProcessMaterial.SetUniform("u_FrameDepth", 1);
@@ -131,7 +136,6 @@ int main()
 
 	//Textures
 	Texture uvTestTexure("res/uv_test.jpg");
-	Texture toonTexture("res/toon.png");
 	Texture planetTexture("res/gradient.png");
 	CubeMap  skybox(skyBoxImages);
 	material3D.SetUniform("u_LightBuffer", 1);
@@ -154,21 +158,13 @@ int main()
 	pointLight.Color = glm::vec3(0.7f, 0.3f, 0.4f);
 	pointLight.Radius = 15.0f;
 
-	Planet planet("res/Planet.txt");
-
-	Renderable renderable(&cube, &material3D);
-	renderable.GetTransform()->Position = glm::vec3(0.534f, 1.35f, 304.0f);
-	renderable.GetTransform()->Rotate(56.f, glm::vec3(0.0f, 1.0f, 0.0f));
-	printf("%s", renderable.GetSaveFormat().c_str());
+	SolarSystem solarSystem;
 	
 	//Main loop
 	Renderer::Init();
 	while (window.Open())
 	{
 		//Uniform setting //TODO: some of these are set by reference, which might cause unexpected behaviour if one goes out of scope
-		planetMaterial.SetUniform("u_LightDirection", directionalLight.Direction);
-		planetMaterial.SetUniform("u_DiffuseColor", directionalLight.Color);
-		planetMaterial.SetUniform("u_DiffuseIntensity", directionalLight.Intensity);
 		material3D.SetUniform("u_SpecularIntensity", specularIntensity);
 		planetMaterial.SetUniform("u_SpecularIntensity", specularIntensity);
 
@@ -191,7 +187,7 @@ int main()
 			Renderer::Begin(directionalLight.GetLightProjection() * directionalLight.GetLightView());
 			Renderer::Render(&material3D, mesh.GetVertexArray(), meshTransform.GetMatrix());
 			Renderer::Render(&material3D, cube.GetVertexArray(), cubeTransform.GetMatrix());
-			planet.Render(planetMaterial);
+			solarSystem.Render();
 		}
 		lightBuffer.Unbind();
 
@@ -202,7 +198,7 @@ int main()
 			Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
 			Renderer::Render(&material3D, mesh.GetVertexArray(), meshTransform.GetMatrix());
 			Renderer::Render(&material3D, cube.GetVertexArray(), cubeTransform.GetMatrix());
-			planet.Render(planetMaterial);
+			solarSystem.Render();
 			skybox.Bind(0);
 			Transform transform;
 			Renderer::Render(&skyboxMaterial, cube.GetVertexArray(), transform.GetMatrix());
@@ -218,13 +214,10 @@ int main()
 		ImGuiRenderer::Begin();
 		{
 			//Planet
-			planet.RenderGui();
-			//Meshes
-			//TODO
+			solarSystem.DrawGui();
+			
 			//Light settings
 			directionalLight.DrawGui();
-			//Camera settings
-			camera.DrawGui();
 		}
 		ImGuiRenderer::End();
 

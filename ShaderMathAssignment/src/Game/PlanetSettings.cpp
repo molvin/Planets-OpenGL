@@ -2,9 +2,8 @@
 #include <algorithm>
 #include "MinMaxFloat.h"
 
-glm::vec3 PlanetSettings::CalculatePointOnPlanet(const glm::vec3& point, MinMaxFloat& elevationMinMax)
+glm::vec3 PlanetSettings::CalculatePointOnPlanet(const glm::vec3& point, MinMaxFloat& elevationMinMax) const
 {
-
 	float elevation = 0.0f;
 	float firstLayerValue = 0.0f;
 	if (!Noise.empty())
@@ -25,6 +24,18 @@ glm::vec3 PlanetSettings::CalculatePointOnPlanet(const glm::vec3& point, MinMaxF
 	elevation = Radius * (1 + elevation);
 	elevationMinMax.AddValue(elevation);
 	return point * elevation;
+}
+
+PlanetSettings& PlanetSettings::operator=(const PlanetSettings& other)
+{
+	Resolution = other.Resolution;
+	Radius = other.Radius;
+	Noise.clear();
+	for (const auto& noise : other.Noise)
+	{
+		Noise.emplace_back(noise);
+	}
+	return *this;
 }
 
 float PlanetSettings::EvaluateNoise(const glm::vec3& point, const NoiseSettings& settings) const
