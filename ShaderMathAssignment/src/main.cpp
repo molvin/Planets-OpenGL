@@ -83,9 +83,6 @@ const std::string skyBoxImages[] =
 	"res/Skybox/purplenebula_bk.tga",
 };
 
-//TODO: Cleanup
-//TODO: better planet generation, multiple noise filters
-
 int main()
 {
 	//Init
@@ -115,17 +112,15 @@ int main()
 	Shader skyboxShader("shaders/skybox.shader");
 
 	{
-		auto planetShader = std::make_shared<Shader>("shaders/planet.shader");
 		auto material3D = std::make_shared<Shader>("shaders/cube.shader");
 		ShaderLibrary::AddShader("shader3D", material3D);
+		auto planetShader = std::make_shared<Shader>("shaders/planet.shader");
 		ShaderLibrary::AddShader("planet", planetShader);
 	}
 	Shader* shader3D = ShaderLibrary::GetShader("shader3D");
-	Shader* planetShader = ShaderLibrary::GetShader("planet");
 
 	//Materials
 	Material material3D(shader3D);
-	Material planetMaterial(planetShader);
 	Material postProcessMaterial(&postProcessShader);
 	Material skyboxMaterial(&skyboxShader);
 	postProcessMaterial.SetUniform("u_FrameDepth", 1);
@@ -136,15 +131,12 @@ int main()
 
 	//Textures
 	Texture uvTestTexure("res/uv_test.jpg");
-	Texture planetTexture("res/gradient.png");
 	CubeMap  skybox(skyBoxImages);
 	material3D.SetUniform("u_LightBuffer", 1);
-	planetMaterial.SetUniform("u_Sampler", 0);
 	postProcessMaterial.AddTexture(frameBuffer.GetColorTexture(), 0);
 	postProcessMaterial.AddTexture(frameBuffer.GetDepthTexture(), 1);
 	material3D.AddTexture(&uvTestTexure, 0);
 	material3D.AddTexture(lightBuffer.GetDepthTexture(), 1);
-	planetMaterial.AddTexture(&planetTexture, 0);
 	
 	//Camera
 	Camera camera(glm::vec3(19.0f, 9.4f, -9.74f));
@@ -152,33 +144,36 @@ int main()
 
 	//Light
 	float specularIntensity = 0.4f;
-	DirectionalLight directionalLight;
 	PointLight pointLight;
 	pointLight.Position = glm::vec3(0.0f, 3.0f, 0.0f);
 	pointLight.Color = glm::vec3(0.7f, 0.3f, 0.4f);
 	pointLight.Radius = 15.0f;
 
 	SolarSystem solarSystem;
+	solarSystem.SetShadowBuffer(lightBuffer.GetDepthTexture());
+
 	
 	//Main loop
 	Renderer::Init();
 	while (window.Open())
 	{
-		//Uniform setting //TODO: some of these are set by reference, which might cause unexpected behaviour if one goes out of scope
+		DirectionalLight& directionalLight = solarSystem.GetGodLight();
+		//Uniform setting
 		material3D.SetUniform("u_SpecularIntensity", specularIntensity);
-		planetMaterial.SetUniform("u_SpecularIntensity", specularIntensity);
 
 		material3D.SetUniform("u_EyePosition", camera.Position);
 		material3D.SetUniform("u_LightViewProjection", directionalLight.GetLightProjection() * directionalLight.GetLightView());
 		
-		planetMaterial.SetUniform("u_EyePosition", camera.Position);
 		skyboxMaterial.SetUniform("u_Projection", window.GetProjectionMatrix());
 		skyboxMaterial.SetUniform("u_View", camera.GetViewMatrix());
 	
 		material3D.SetUniform("u_PointLightCount", 1);
 		directionalLight.UploadToMaterial("u_DirectionalLight", material3D);
-		directionalLight.UploadToMaterial("u_DirectionalLight", planetMaterial);
 		pointLight.UploadToMaterial("u_PointLights", 0, material3D);
+
+
+		solarSystem.Update(camera, window);
+		
 		//Rendering
 		//Light render for shadows
 		lightBuffer.Bind();
@@ -187,7 +182,7 @@ int main()
 			Renderer::Begin(directionalLight.GetLightProjection() * directionalLight.GetLightView());
 			Renderer::Render(&material3D, mesh.GetVertexArray(), meshTransform.GetMatrix());
 			Renderer::Render(&material3D, cube.GetVertexArray(), cubeTransform.GetMatrix());
-			solarSystem.Render();
+			solarSystem.Render(camera.Position);
 		}
 		lightBuffer.Unbind();
 
@@ -198,7 +193,7 @@ int main()
 			Renderer::Begin(window.GetProjectionMatrix() * camera.GetViewMatrix());
 			Renderer::Render(&material3D, mesh.GetVertexArray(), meshTransform.GetMatrix());
 			Renderer::Render(&material3D, cube.GetVertexArray(), cubeTransform.GetMatrix());
-			solarSystem.Render();
+			solarSystem.Render(camera.Position);
 			skybox.Bind(0);
 			Transform transform;
 			Renderer::Render(&skyboxMaterial, cube.GetVertexArray(), transform.GetMatrix());
@@ -213,11 +208,7 @@ int main()
 		//ImGUI
 		ImGuiRenderer::Begin();
 		{
-			//Planet
 			solarSystem.DrawGui();
-			
-			//Light settings
-			directionalLight.DrawGui();
 		}
 		ImGuiRenderer::End();
 

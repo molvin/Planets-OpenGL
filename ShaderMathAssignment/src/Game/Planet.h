@@ -5,11 +5,10 @@
 #include "../ImGUI/imgui_color_gradient.h"
 #include "../Graphics/Material.h"
 #include "../Graphics/Texture.h"
-
-
-//TODO: handle memory leak
-//TODO: emit light
-//TODO: gradient editing, material for each planet
+#include "../Graphics/Light/AmbientLight.h"
+#include "../Graphics/Light/DirectionalLight.h"
+#include "../Graphics/Light/PointLight.h"
+#include <vector>
 
 class PlanetFace
 {
@@ -24,13 +23,17 @@ class Planet
 {
 public:
 	Planet();
-	void Render();
+	void Render(DirectionalLight& dirLight, AmbientLight& ambient, std::vector<PointLight*>& pointLights, const glm::vec3& eyePosition);
 	void DrawGui(bool& destroy);
 	void GeneratePlanet();
 	const PlanetSettings& GetSettings() const { return _settings; }
 	void SetSettings(const PlanetSettings settings) { _settings = settings; }
 	Transform* GetTransform() { return &_transform; }
-	unsigned int Id;
+	unsigned int Id = 0;
+	ImGradient Gradient;
+	float Specular = 0.0f;
+	PointLight LightSource;
+
 private:
 	void SetColors();
 
@@ -39,8 +42,7 @@ private:
 	MinMaxFloat _elevation = MinMaxFloat(1000000.f, -100000000.f);
 	PlanetSettings _settings;
 	std::string _path;
-	ImGradient _gradient;
-	Texture* _texture;
+	Texture* _texture = nullptr;
 	Material _material;
 };
 

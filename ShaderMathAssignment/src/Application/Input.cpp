@@ -41,11 +41,18 @@ void Input::Update()
 {
 	for (char& key : _keys)
 	{
+		if ((key & 8) > 0)
+		{
+			key &= ~8;
+		}
+		
 		if((key & 1) > 0)	//Press bit is set, clear press bit and set held bit
 		{
 			key |= 4;
+			key |= 8;
 			key &= ~1;
 		}
+
 		if ((key & 2) > 0)	//Release bit is set, clear release bit and clear held bit
 		{
 			key &= ~2;
@@ -55,9 +62,15 @@ void Input::Update()
 
 	for (char& button : _mouseButtons)
 	{
+		if ((button & 8) > 0)
+		{
+			button &= ~8;
+		}
+		
 		if ((button & 1) > 0)	//Press bit is set, clear press bit and set held bit
 		{
 			button |= 4;
+			button |= 8;
 			button &= ~1;
 		}
 		if ((button & 2) > 0)	//Release bit is set, clear release bit and clear held bit

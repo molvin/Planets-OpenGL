@@ -1,6 +1,11 @@
 #include "PointLight.h"
 #include "../Material.h"
 
+void PointLight::UploadToMaterial(Material& material)
+{
+	UploadToMaterial("u_PointLight", material);
+}
+
 void PointLight::UploadToMaterial(const std::string& prefix, const int index, Material& material)
 {
 	UploadToMaterial(prefix + "[" + std::to_string(index) + "]", material);

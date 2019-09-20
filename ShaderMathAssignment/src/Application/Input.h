@@ -11,11 +11,11 @@ public:
 	static char _keys[];
 	static char _mouseButtons[];
 	
-	static bool GetKeyDown(const int key) { return (_keys[key] & 1) > 0; }
+	static bool GetKeyDown(const int key) { return (_keys[key] & 8) > 0; }
 	static bool GetKeyUp(const int key) { return (_keys[key] & 2) > 0; }
 	static bool GetKey(const int key) { return (_keys[key] & 4) > 0; }
 
-	static bool GetMouseButtonDown(const int button) { return (_mouseButtons[button] & 1) > 0; }
+	static bool GetMouseButtonDown(const int button) { return (_mouseButtons[button] & 8) > 0; }
 	static bool GetMouseButtonUp(const int button) { return (_mouseButtons[button] & 2) > 0; }
 	static bool GetMouseButton(const int button) { return (_mouseButtons[button] & 4) > 0; }
 	

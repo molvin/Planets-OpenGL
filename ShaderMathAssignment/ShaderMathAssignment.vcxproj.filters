@@ -32,6 +32,7 @@
     <ClCompile Include="src\Game\SolarSystem.cpp" />
     <ClCompile Include="src\ImGUI\imgui_color_gradient.cpp" />
     <ClCompile Include="src\Graphics\ShaderLibrary.cpp" />
+    <ClCompile Include="src\Graphics\Light\AmbientLight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ImGUI\imconfig.h" />
@@ -66,5 +67,6 @@
     <ClInclude Include="src\Game\SolarSystem.h" />
     <ClInclude Include="src\ImGUI\imgui_color_gradient.h" />
     <ClInclude Include="src\Graphics\ShaderLibrary.h" />
+    <ClInclude Include="src\Graphics\Light\AmbientLight.h" />
   </ItemGroup>
 </Project>

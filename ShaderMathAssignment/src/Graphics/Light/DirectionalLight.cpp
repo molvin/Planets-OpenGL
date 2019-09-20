@@ -22,6 +22,11 @@ void DirectionalLight::DrawGui()
 	ImGui::End();
 }
 
+void DirectionalLight::UploadToMaterial(Material& material)
+{
+	UploadToMaterial("u_DirectionalLight", material);
+}
+
 void DirectionalLight::UploadToMaterial(const std::string& prefix, Material& material)
 {
 	material.SetUniform(prefix + ".Direction", Direction);

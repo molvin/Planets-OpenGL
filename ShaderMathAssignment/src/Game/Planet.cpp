@@ -9,17 +9,48 @@
 #include <utility>
 #include "../Graphics/ShaderLibrary.h"
 #include "../Graphics/Texture.h"
-
+#include "../Graphics/Light/Light.h"
+#include "../Graphics/Light/PointLight.h"
+#include "../Graphics/Light/AmbientLight.h"
+#include "../Graphics/Light/DirectionalLight.h"
 
 //----- Planet -----
 Planet::Planet() : _material(ShaderLibrary::GetShader("planet"))
 {
 	printf("Created planet");
+	LightSource.Intensity = 0.0f;
+	LightSource.Radius = 10.f;
+	LightSource.Color = glm::vec3(1.0f);
+	LightSource.Position = _transform.Position;
 }
 
-void Planet::Render()
+void Planet::Render(DirectionalLight& dirLight, AmbientLight& ambient, std::vector<PointLight*>& pointLights, const glm::vec3& eyePosition)
 {
+	LightSource.Position = _transform.Position; //TEMP
+	_material.SetUniform("u_EyePosition", eyePosition);
 	_material.SetUniform("u_ElevationMinMax", glm::vec2(_elevation.Min, _elevation.Max));
+	_material.SetUniform("u_SpecularIntensity", Specular);
+	dirLight.UploadToMaterial(_material);
+	ambient.UploadToMaterial(_material);
+	const int pointLightCount = pointLights.size();
+	int j = 0;
+	for (int i = 0; i < pointLightCount; i++)
+	{
+		const float distance = glm::length(_transform.Position - pointLights[i]->Position);
+		if (distance < 0.1f)
+		{
+			_material.SetUniform("u_Emission.Intensity", pointLights[i]->Intensity);
+			_material.SetUniform("u_Emission.Color", pointLights[i]->Color);
+		}
+		else
+		{
+			pointLights[i]->UploadToMaterial("u_PointLights", j, _material);
+			j++;
+		}
+	}
+	_material.SetUniform("u_PointLightCount", j);
+
+	
 	for (std::unique_ptr<PlanetFace>& face : _faces)
 	{
 		Renderer::Render(&_material, face->GetMesh().GetVertexArray(), _transform.GetMatrix());
@@ -37,9 +68,8 @@ void Planet::DrawGui(bool& destroy)
 	glm::vec3 euler = GetTransform()->GetEuler();
 	const bool changed = ImGui::SliderFloat3("Rotation", &euler[0], -180.0f, 180.0f);
 	if (changed) GetTransform()->SetEuler(euler);
-
-	
 	ImGui::InputFloat3("Scale", &GetTransform()->Scale[0]);
+
 	ImGui::Text("Settings");
 	ImGui::InputInt("Resolution", &_settings.Resolution);
 	ImGui::InputFloat("Radius", &_settings.Radius);
@@ -51,11 +81,18 @@ void Planet::DrawGui(bool& destroy)
 	ImGui::InputFloat("MinValue", &_settings.Noise[0].MinValue);
 	ImGui::InputFloat3("Center", &_settings.Noise[0].Center.x);
 
+	ImGui::Text("Light");
+	ImGui::InputFloat("Light Intensity", &LightSource.Intensity);
+	ImGui::InputFloat("Light Radius", &LightSource.Radius);
+	ImGui::ColorEdit3("Light Color", &LightSource.Color[0]);
 
+	ImGui::Text("Color");
 
+	ImGui::InputFloat("Specular", &Specular);
+	
 	static ImGradientMark* draggingMark = nullptr;
 	static ImGradientMark* selectedMark = nullptr;
-	ImGui::GradientEditor(&_gradient, draggingMark, selectedMark);
+	ImGui::GradientEditor(&Gradient, draggingMark, selectedMark);
 
 	const bool regenerate = ImGui::Button("Regenerate");
 	destroy = ImGui::Button("Destroy");
@@ -94,10 +131,10 @@ void Planet::SetColors()
 	float pixels[size];
 	for(int i = 0; i < size; i += 4)
 	{
-		_gradient.getColorAt((float)i / (float)size, &pixels[i]);
+		Gradient.getColorAt((float)i / (float)size, &pixels[i]);
 		pixels[i + 3] = 1.0f;
 	}
-
+	if (_texture != nullptr) delete _texture;
 	_texture = new Texture(&pixels[0], 100, 1);
 	_material.AddTexture(_texture, 0);
 	
